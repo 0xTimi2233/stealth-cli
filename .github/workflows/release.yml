@@ -6,7 +6,7 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -30,9 +30,10 @@ jobs:
           bun-version: "1.4.0"
       - run: bun install --frozen-lockfile
       - name: 编译独立二进制
+        shell: bash
         run: |
           mkdir -p dist
-          bun build --compile --minify src/features/cli/cli.ts --outfile dist/${{ matrix.artifact }}
+          bun build --compile --minify --external playwright-core --external chromium-bidi src/features/cli/cli.ts --outfile dist/${{ matrix.artifact }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.artifact }}
@@ -43,6 +44,8 @@ jobs:
     name: 发布 GitHub Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -58,5 +61,5 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           cd release-artifacts
-          sha256sum * > SHA256SUMS
+          sha256sum stealth-cli-* > SHA256SUMS
           gh release create "$TAG_NAME" --generate-notes --title "$TAG_NAME" *

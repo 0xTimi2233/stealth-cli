@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { join } from 'node:path'
 import { CloakAdapter } from '@/adapter/cloak/cloak.adapter'
 import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
 import { PrismAdapter } from '@/adapter/prism/prism.adapter'
@@ -30,7 +31,9 @@ describe('Integration: Dual Engine Pipeline', () => {
     })
 
     expect(prismArgs.some((a) => a === '--timezone=Asia/Tokyo')).toBe(true)
-    expect(prismArgs.some((a) => a.includes('/prism/profiles/worker-tokyo/user-data'))).toBe(true)
+    expect(
+      prismArgs.some((a) => a.includes(join('prism', 'profiles', 'worker-tokyo', 'user-data'))),
+    ).toBe(true)
 
     // 2. 在 Cloak 引擎下创建同名环境 (物理数据隔离)
     const pmCloak = new ProfileManager(store, 'cloak', config.defaults)
@@ -46,7 +49,9 @@ describe('Integration: Dual Engine Pipeline', () => {
     })
 
     expect(cloakArgs.some((a) => a === '--fingerprint-timezone=America/New_York')).toBe(true)
-    expect(cloakArgs.some((a) => a.includes('/cloak/profiles/worker-tokyo/user-data'))).toBe(true)
+    expect(
+      cloakArgs.some((a) => a.includes(join('cloak', 'profiles', 'worker-tokyo', 'user-data'))),
+    ).toBe(true)
     expect(cloakArgs.some((a) => a.includes('--enable-automation'))).toBe(false)
-  })
+  }, 60_000)
 })

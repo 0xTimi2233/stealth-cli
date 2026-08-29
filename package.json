@@ -6,8 +6,11 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "fmt": "biome format --write .",
+    "fmt:check": "biome format .",
     "check": "biome check . && tsc --noEmit",
-    "format": "biome format --write ."
+    "build": "bun build --compile --minify --external playwright-core src/features/cli/cli.ts --outfile dist/stealth-cli"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.11",
