@@ -23,12 +23,17 @@ export async function handleCliCommand(
 	store: ProfileStorePort,
 	engines: Record<EngineType, EnginePort>,
 ): Promise<string> {
-	const command = argv[0];
-	if (!command) {
-		throw new Error(
-			"No command specified. Available: list, create, delete, launch-args, launch",
-		);
-	}
+	const KNOWN_COMMANDS = new Set([
+		"list",
+		"create",
+		"delete",
+		"launch-args",
+		"launch",
+	]);
+	const command = argv[0] && KNOWN_COMMANDS.has(argv[0]) ? argv[0] : "launch";
+	const remainingArgs = KNOWN_COMMANDS.has(argv[0] ?? "")
+		? argv.slice(1)
+		: argv;
 
 	const activeEngineType: EngineType =
 		(process.env.STEALTH_ENGINE as EngineType) || config.engine;
@@ -46,14 +51,13 @@ export async function handleCliCommand(
 		}
 
 		case "create": {
-			const remaining = argv.slice(1);
-			const name = remaining.find((a) => !a.startsWith("--"));
+			const name = remainingArgs.find((a) => !a.startsWith("--"));
 			if (!name) {
 				throw new Error("Profile name is required for create");
 			}
-			const timezone = parseOption(remaining, "--timezone");
-			const language = parseOption(remaining, "--language");
-			const proxy = parseOption(remaining, "--proxy");
+			const timezone = parseOption(remainingArgs, "--timezone");
+			const language = parseOption(remainingArgs, "--language");
+			const proxy = parseOption(remainingArgs, "--proxy");
 			const result = await pm.create(name, { timezone, language, proxy });
 			return JSON.stringify({
 				success: true,
@@ -63,7 +67,7 @@ export async function handleCliCommand(
 		}
 
 		case "delete": {
-			const name = argv[1];
+			const name = remainingArgs[0];
 			if (!name) {
 				throw new Error("Profile name is required for delete");
 			}
@@ -72,8 +76,7 @@ export async function handleCliCommand(
 		}
 
 		case "launch-args": {
-			const remaining = argv.slice(1);
-			const name = parseOption(remaining, "--profile");
+			const name = parseOption(remainingArgs, "--profile");
 			const profile = name ? await pm.get(name) : null;
 			if (name && !profile) {
 				throw new Error(
@@ -96,21 +99,22 @@ export async function handleCliCommand(
 				profile: p,
 				engine: activeEngineType,
 				userDataDir,
-				incomingArgs: remaining.filter((a) => a !== "--profile" && a !== name),
+				incomingArgs: remainingArgs.filter(
+					(a) => a !== "--profile" && a !== name,
+				),
 			});
 			return JSON.stringify(args);
 		}
 
 		case "launch": {
-			const remaining = argv.slice(1);
 			let targetProfile =
 				process.env.PRISM_PROFILE || process.env.STEALTH_PROFILE;
-			const profileOpt = parseOption(remaining, "--profile");
+			const profileOpt = parseOption(remainingArgs, "--profile");
 			if (profileOpt) {
 				targetProfile = profileOpt;
 			}
 
-			const extraArgs = remaining.filter(
+			const extraArgs = remainingArgs.filter(
 				(a) => a !== "--profile" && a !== targetProfile,
 			);
 			const result = await launchProfile(
