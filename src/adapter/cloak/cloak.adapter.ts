@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
-import { buildLaunchOptions } from 'cloakbrowser'
+import { existsSync } from 'node:fs'
+import { buildLaunchOptions, ensureBinary } from 'cloakbrowser'
 import { resolveEngineExecutable } from '@/adapter/kernel/kernel-resolver'
 import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
 import type { EnginePort } from '@/port/engine.port'
@@ -10,7 +11,17 @@ export class CloakAdapter implements EnginePort {
   constructor(private readonly rawKernelPath: string) {}
 
   async getKernelPath(): Promise<string> {
-    return resolveEngineExecutable(this.name, this.rawKernelPath)
+    try {
+      if (existsSync(this.rawKernelPath)) {
+        return await resolveEngineExecutable(this.name, this.rawKernelPath)
+      }
+    } catch {
+      // 路径未就绪时向下由官方自动寻址/下载
+    }
+
+    // 官方自动下载与缓存寻址：若本地未安装，自动拉取对应平台的最新内核
+    const officialBinary = await ensureBinary()
+    return resolveEngineExecutable(this.name, officialBinary)
   }
 
   async buildArgs(request: LaunchRequest): Promise<string[]> {

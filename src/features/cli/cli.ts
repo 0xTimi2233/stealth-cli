@@ -60,7 +60,7 @@ export async function handleCliCommand(
   store: ProfileStorePort,
   engines: Record<EngineType, EnginePort>,
 ): Promise<string> {
-  const KNOWN_COMMANDS = new Set(['list', 'create', 'delete', 'launch-args', 'launch'])
+  const KNOWN_COMMANDS = new Set(['list', 'create', 'delete', 'launch-args', 'launch', 'install'])
   const command = argv[0] && KNOWN_COMMANDS.has(argv[0]) ? argv[0] : 'launch'
   const remainingArgs = KNOWN_COMMANDS.has(argv[0] ?? '') ? argv.slice(1) : argv
 
@@ -76,6 +76,16 @@ export async function handleCliCommand(
     case 'list': {
       const profiles = await pm.list()
       return JSON.stringify(profiles)
+    }
+
+    case 'install': {
+      const targetEngineType = (remainingArgs[0] as EngineType) || activeEngineType
+      const targetEngine = engines[targetEngineType]
+      if (!targetEngine) {
+        throw new Error(`Engine '${targetEngineType}' is not supported`)
+      }
+      const kernelPath = await targetEngine.getKernelPath()
+      return JSON.stringify({ success: true, engine: targetEngineType, kernelPath })
     }
 
     case 'create': {

@@ -45,5 +45,8 @@ describe('Feature: CLI Handler', () => {
 
     const delOut = await handleCliCommand(['delete', 'cli-test'], config, store, engines)
     expect(JSON.parse(delOut).success).toBe(true)
+
+    const installOut = await handleCliCommand(['install', 'prism'], config, store, engines)
+    expect(JSON.parse(installOut).success).toBe(true)
   })
 })
