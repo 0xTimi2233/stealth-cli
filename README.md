@@ -1,6 +1,19 @@
 # stealth-cli
 
-通用隐形浏览器调度套件与自动化代理层，采用纯编排（Pure Orchestration）架构统一管理 Prism Browser（Chromium 144）与 CloakBrowser（Chromium 145/146）双隐形内核，负责浏览器环境 Profile 生命周期管理以及自动化测试框架的内核调度
+通用隐形浏览器调度套件与自动化代理层，采用纯编排（Pure Orchestration）架构统一管理 Prism Browser 与 CloakBrowser 双隐形内核，负责浏览器环境 Profile 生命周期管理以及自动化测试框架的内核调度
+
+## 上游依赖
+
+本项目是**纯编排层**，不内置浏览器内核，也不内置自动化驱动。三个上游各自独立安装与升级，安装方式以各自 README 为准：
+
+| 上游项目 | 角色 | 本项目接线点 |
+| :--- | :--- | :--- |
+| [DFarm6/Prism-Browser-Community](https://github.com/DFarm6/Prism-Browser-Community) | Prism 引擎内核宿主：Chromium + Electron 的本地优先多环境指纹浏览器，内核由宿主 App 自带管理，免费版内核为 **Chromium 144** | `config.toml` → `engines.prism.binary_path` 指向宿主 App 内 `Contents/Resources/kernels/current/Chromium.app` |
+| [CloakHQ/cloakbrowser](https://github.com/CloakHQ/cloakbrowser) | Cloak 引擎内核：源码级指纹补丁 Chromium，已作为 npm 依赖内聚，内核在首次启动时自动下载并缓存 | `config.toml` → `engines.cloak.binary_path`；路径缺失或失效时自动回落官方 `ensureBinary()` |
+| [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | 上层自动化驱动：面向 AI Agent 的浏览器 CLI，E2E 测试与日常 Agent 调度均由它拉起内核 | 环境变量 `AGENT_BROWSER_EXECUTABLE_PATH` 指向 `stealth-launcher` |
+
+> 内核实际版本以 Prism 宿主的 `kernels/current/manifest.json` 与 Cloak 缓存目录为准，本项目不锁定内核版本。
+> Prism 引擎依赖 macOS `.app` 包结构解析，当前仅在 macOS (Apple Silicon) 下验证；Cloak 引擎跨平台。
 
 ## 核心架构
 
@@ -55,6 +68,7 @@ screen_height = 900
 | `STEALTH_ENGINE` | 读 config.toml | 动态覆盖当前激活引擎（`prism` \| `cloak`） |
 | `PROFILE` | - | Launcher 默认绑定的目标 Profile 名称 |
 | `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `/usr/local/bin/stealth-launcher` 供 agent-browser 挂载 |
+| `AGENT_BROWSER_BIN` | `~/.bun/bin/agent-browser` | E2E 测试探测的 agent-browser 可执行路径，缺失则跳过 E2E 用例 |
 
 ## CLI 指令契约
 
@@ -138,7 +152,7 @@ stealth-cli launch-args [--profile <name>]
 
 ### 5. 自动预装/就绪内核
 
-自动检测、下载并自愈建立指定引擎的规范软链：
+校验内核并自愈建立指定引擎的规范软链；`cloak` 在内核缺失时自动下载官方内核，`prism` 依赖宿主 App 已就绪的内核路径：
 
 ```bash
 stealth-cli install [engine]
@@ -159,7 +173,7 @@ stealth-cli install [engine]
 
 在 `~/.zprofile` 中配置：
 ```bash
-export AGENT_BROWSER_EXECUTABLE_PATH="/Users/sony/.local/bin/stealth-launcher"
+export AGENT_BROWSER_EXECUTABLE_PATH="/usr/local/bin/stealth-launcher"
 ```
 
 在日常执行或 Agent 调度时：
