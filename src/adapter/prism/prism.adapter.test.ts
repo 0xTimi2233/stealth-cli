@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createProfileEntity } from '../../domain/profile'
+import { createProfileEntity } from '@/domain/profile'
 import { PrismAdapter } from './prism.adapter'
 
 describe('Adapter: PrismAdapter', () => {

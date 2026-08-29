@@ -1,6 +1,6 @@
 import { defaultProfileDraft } from '@prism/shared/defaults'
 import type { BrowserProfile } from '@prism/shared/types'
-import type { Profile } from '../../domain/profile'
+import type { Profile } from '@/domain/profile'
 
 export function toPrismBrowserProfile(domainProfile: Profile): BrowserProfile {
   const draft = defaultProfileDraft()
@@ -20,6 +20,7 @@ export function toPrismBrowserProfile(domainProfile: Profile): BrowserProfile {
     serialNumber: 0,
     name: domainProfile.name,
     status: 'closed',
+    startUrls: [],
     createdAt: domainProfile.createdAt,
     updatedAt: domainProfile.updatedAt,
     fingerprint: fp,

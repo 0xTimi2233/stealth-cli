@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import type { StealthConfig } from '../../domain/config'
-import type { EngineType } from '../../domain/launch'
-import type { ConfigPort } from '../../port/config.port'
+import type { StealthConfig } from '@/domain/config'
+import type { EngineType } from '@/domain/launch'
+import type { ConfigPort } from '@/port/config.port'
 
 function resolveStealthHome(): string {
   return process.env.STEALTH_HOME || join(homedir(), '.stealth')

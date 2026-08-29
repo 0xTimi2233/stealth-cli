@@ -1,11 +1,11 @@
-import type { StealthDefaultsConfig } from '../../domain/config'
-import type { EngineType } from '../../domain/launch'
+import type { StealthDefaultsConfig } from '@/domain/config'
+import type { EngineType } from '@/domain/launch'
 import {
   createProfileEntity,
   type Profile,
   type ProfileDraftOptions,
-} from '../../domain/profile'
-import type { ProfileStorePort } from '../../port/store.port'
+} from '@/domain/profile'
+import type { ProfileStorePort } from '@/port/store.port'
 
 export class ProfileManager {
   constructor(

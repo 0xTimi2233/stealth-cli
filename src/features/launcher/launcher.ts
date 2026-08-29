@@ -1,7 +1,7 @@
-import type { LaunchRequest, LaunchResult } from '../../domain/launch'
-import { createProfileEntity } from '../../domain/profile'
-import type { EnginePort } from '../../port/engine.port'
-import type { ProfileStorePort } from '../../port/store.port'
+import type { LaunchRequest, LaunchResult } from '@/domain/launch'
+import { createProfileEntity } from '@/domain/profile'
+import type { EnginePort } from '@/port/engine.port'
+import type { ProfileStorePort } from '@/port/store.port'
 
 export async function launchProfile(
   name: string | undefined,
@@ -20,7 +20,12 @@ export async function launchProfile(
     profile = createProfileEntity(profileName)
   }
 
-  const userDataDir = store.resolveUserDataDir(profileName, engine.name)
+  const incomingUserData = incomingArgs
+    .find((a) => a.startsWith('--user-data-dir='))
+    ?.split('=')[1]
+
+  const userDataDir =
+    incomingUserData || store.resolveUserDataDir(profileName, engine.name)
 
   const request: LaunchRequest = {
     profile,

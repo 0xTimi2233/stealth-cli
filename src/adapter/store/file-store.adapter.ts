@@ -1,8 +1,8 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { EngineType } from '../../domain/launch'
-import type { Profile } from '../../domain/profile'
-import type { ProfileStorePort } from '../../port/store.port'
+import type { EngineType } from '@/domain/launch'
+import type { Profile } from '@/domain/profile'
+import type { ProfileStorePort } from '@/port/store.port'
 
 interface StoreFilePayload {
   version: number

@@ -1,5 +1,5 @@
-import { TomlConfigAdapter } from '../../adapter/config/toml-config.adapter'
-import type { StealthConfig } from '../../domain/config'
+import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
+import type { StealthConfig } from '@/domain/config'
 
 export async function resolveAppConfig(
   customConfigPath?: string,

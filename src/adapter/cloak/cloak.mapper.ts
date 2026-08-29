@@ -1,5 +1,5 @@
 import type { LaunchOptions } from '@cloak/types'
-import type { LaunchRequest } from '../../domain/launch'
+import type { LaunchRequest } from '@/domain/launch'
 
 export function toCloakLaunchOptions(request: LaunchRequest): LaunchOptions {
   const sanitizedExtra = request.incomingArgs.filter(

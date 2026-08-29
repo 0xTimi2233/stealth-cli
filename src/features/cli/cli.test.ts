@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { CloakAdapter } from '../../adapter/cloak/cloak.adapter'
-import { TomlConfigAdapter } from '../../adapter/config/toml-config.adapter'
-import { PrismAdapter } from '../../adapter/prism/prism.adapter'
-import { FileStoreAdapter } from '../../adapter/store/file-store.adapter'
+import { CloakAdapter } from '@/adapter/cloak/cloak.adapter'
+import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
+import { PrismAdapter } from '@/adapter/prism/prism.adapter'
+import { FileStoreAdapter } from '@/adapter/store/file-store.adapter'
 import { handleCliCommand } from './cli'
 
 const TEST_VAULT = `/tmp/stealth-cli-test-${Math.random().toString(36).slice(2)}`

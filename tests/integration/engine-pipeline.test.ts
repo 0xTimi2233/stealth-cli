@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { CloakAdapter } from '../../src/adapter/cloak/cloak.adapter'
-import { TomlConfigAdapter } from '../../src/adapter/config/toml-config.adapter'
-import { PrismAdapter } from '../../src/adapter/prism/prism.adapter'
-import { FileStoreAdapter } from '../../src/adapter/store/file-store.adapter'
-import { ProfileManager } from '../../src/features/profile/profile-manager'
+import { CloakAdapter } from '@/adapter/cloak/cloak.adapter'
+import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
+import { PrismAdapter } from '@/adapter/prism/prism.adapter'
+import { FileStoreAdapter } from '@/adapter/store/file-store.adapter'
+import { ProfileManager } from '@/features/profile/profile-manager'
 
 const VAULT_ROOT = `/tmp/stealth-pipeline-test-${Math.random().toString(36).slice(2)}`
 

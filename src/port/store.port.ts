@@ -1,5 +1,5 @@
-import type { EngineType } from '../domain/launch'
-import type { Profile } from '../domain/profile'
+import type { EngineType } from '@/domain/launch'
+import type { Profile } from '@/domain/profile'
 
 export interface ProfileStorePort {
   resolveUserDataDir(name: string, engine: EngineType): string

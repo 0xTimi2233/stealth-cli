@@ -1,12 +1,8 @@
 import { spawn } from 'node:child_process'
 import { buildArgs as buildCloakOfficialArgs } from '@cloak/args'
-import type {
-  EngineType,
-  LaunchRequest,
-  LaunchResult,
-} from '../../domain/launch'
-import type { EnginePort } from '../../port/engine.port'
-import { ensureEngineSymlink } from '../symlink'
+import { ensureEngineSymlink } from '@/adapter/symlink'
+import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
+import type { EnginePort } from '@/port/engine.port'
 import { toCloakLaunchOptions } from './cloak.mapper'
 
 export class CloakAdapter implements EnginePort {

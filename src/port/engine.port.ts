@@ -1,4 +1,4 @@
-import type { EngineType, LaunchRequest, LaunchResult } from '../domain/launch'
+import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
 
 export interface EnginePort {
   readonly name: EngineType

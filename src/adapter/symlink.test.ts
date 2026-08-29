@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { lstat, mkdir, readlink, rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import { ensureEngineSymlink } from './symlink'
+import { ensureEngineSymlink } from '@/adapter/symlink'
 
 const TEST_DIR = join(
   '/tmp/stealth-symlink-test',
@@ -9,7 +9,7 @@ const TEST_DIR = join(
 )
 
 describe('Adapter: Symlink Self-Healing', () => {
-  it('automatically creates unified symlink pointing to real kernel binary_path', async () => {
+  it('creates unified symlink pointing to real kernel binary_path', async () => {
     const fakeRealKernel = join(
       TEST_DIR,
       'downloads/chromium-v145/Chromium.app',

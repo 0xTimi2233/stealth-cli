@@ -17,6 +17,7 @@
 
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/*"],
       "@prism/*": ["/Users/sony/githubs/Prism-Browser-Community/src/*"],
       "@cloak/*": ["/Users/sony/githubs/CloakBrowser/js/src/*"]
     },

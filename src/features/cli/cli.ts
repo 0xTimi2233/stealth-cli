@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { CloakAdapter } from '../../adapter/cloak/cloak.adapter'
-import { TomlConfigAdapter } from '../../adapter/config/toml-config.adapter'
-import { PrismAdapter } from '../../adapter/prism/prism.adapter'
-import { FileStoreAdapter } from '../../adapter/store/file-store.adapter'
-import type { StealthConfig } from '../../domain/config'
-import type { EngineType } from '../../domain/launch'
-import type { EnginePort } from '../../port/engine.port'
-import type { ProfileStorePort } from '../../port/store.port'
+import { CloakAdapter } from '@/adapter/cloak/cloak.adapter'
+import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
+import { PrismAdapter } from '@/adapter/prism/prism.adapter'
+import { FileStoreAdapter } from '@/adapter/store/file-store.adapter'
+import type { StealthConfig } from '@/domain/config'
+import type { EngineType } from '@/domain/launch'
+import type { EnginePort } from '@/port/engine.port'
+import type { ProfileStorePort } from '@/port/store.port'
 import { launchProfile } from '../launcher/launcher'
 import { ProfileManager } from '../profile/profile-manager'
 
@@ -123,13 +123,16 @@ export async function handleCliCommand(
         store,
       )
 
-      return new Promise<string>((resolve, reject) => {
-        result.process.on('error', (err) => reject(err))
-        result.process.on('exit', (code) => {
-          if (code === 0) resolve(JSON.stringify({ success: true }))
-          else reject(new Error(`Kernel exited with code ${code}`))
-        })
+      result.process.on('error', (err) => {
+        console.error(`Error launching kernel: ${err.message}`)
+        process.exit(1)
       })
+
+      result.process.on('exit', (code) => {
+        process.exit(code ?? 0)
+      })
+
+      return ''
     }
 
     default: {
@@ -150,7 +153,9 @@ async function main(): Promise<void> {
     }
 
     const output = await handleCliCommand(argv, config, store, engines)
-    console.log(output)
+    if (output) {
+      console.log(output)
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error(`Error: ${message}`)

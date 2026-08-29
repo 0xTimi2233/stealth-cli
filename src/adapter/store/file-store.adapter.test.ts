@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createProfileEntity } from '../../domain/profile'
+import { createProfileEntity } from '@/domain/profile'
 import { FileStoreAdapter } from './file-store.adapter'
 
 const TEST_VAULT = join(

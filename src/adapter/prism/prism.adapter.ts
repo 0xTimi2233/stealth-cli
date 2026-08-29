@@ -1,13 +1,9 @@
 import { spawn } from 'node:child_process'
 import { hostHardwareSnapshot } from '@prism/main/host-hardware'
 import { buildLaunchArgs } from '@prism/main/launch-args'
-import type {
-  EngineType,
-  LaunchRequest,
-  LaunchResult,
-} from '../../domain/launch'
-import type { EnginePort } from '../../port/engine.port'
-import { ensureEngineSymlink } from '../symlink'
+import { ensureEngineSymlink } from '@/adapter/symlink'
+import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
+import type { EnginePort } from '@/port/engine.port'
 import { toPrismBrowserProfile } from './prism.mapper'
 
 export class PrismAdapter implements EnginePort {

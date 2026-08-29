@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { createProfileEntity } from '../../domain/profile'
-import type { EnginePort } from '../../port/engine.port'
-import type { ProfileStorePort } from '../../port/store.port'
+import { createProfileEntity } from '@/domain/profile'
+import type { EnginePort } from '@/port/engine.port'
+import type { ProfileStorePort } from '@/port/store.port'
 import { launchProfile } from './launcher'
 
 describe('Feature: Launcher', () => {
