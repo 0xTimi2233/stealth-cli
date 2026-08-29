@@ -10,7 +10,8 @@
     "fmt": "biome format --write .",
     "fmt:check": "biome format .",
     "check": "biome check . && tsc --noEmit",
-    "build": "bun build --compile --minify --external playwright-core --target=bun-darwin-arm64 src/features/cli/cli.ts --outfile dist/stealth-cli"
+    "build:js": "bun build --target=bun --minify --external playwright-core src/features/cli/cli.ts --outfile dist/stealth-cli.js",
+    "build": "bun run build:js && bun build --compile --minify --external playwright-core --target=bun-darwin-arm64 src/features/cli/cli.ts --outfile dist/stealth-cli"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.11",

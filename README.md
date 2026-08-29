@@ -181,6 +181,31 @@ const browser = await chromium.launch({
 })
 ```
 
+## 安装与分发形式
+
+Release 页面同时提供两种生产级分发产物，供不同场景按需选择：
+
+### 模式 A：轻量单文件脚本（推荐，仅 ~127 KB）
+适合本地开发机或已安装 Bun 的机器，零多余体积开销：
+```bash
+curl -L https://github.com/0xTimi2233/stealth-cli/releases/latest/download/stealth-cli.js -o /usr/local/bin/stealth-cli
+chmod +x /usr/local/bin/stealth-cli
+ln -sf /usr/local/bin/stealth-cli /usr/local/bin/stealth-launcher
+```
+
+### 模式 B：独立单文件二进制（~50 MB）
+适合远程裸机或容器，无需目标机器安装 Node.js 或 Bun：
+```bash
+# Linux x64
+curl -L https://github.com/0xTimi2233/stealth-cli/releases/latest/download/stealth-cli-linux-x64 -o /usr/local/bin/stealth-cli
+
+# macOS (Apple Silicon)
+curl -L https://github.com/0xTimi2233/stealth-cli/releases/latest/download/stealth-cli-darwin-arm64 -o /usr/local/bin/stealth-cli
+
+chmod +x /usr/local/bin/stealth-cli
+ln -sf /usr/local/bin/stealth-cli /usr/local/bin/stealth-launcher
+```
+
 ## 工程验证
 
 ```bash
