@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { spawnSync } from 'node:child_process'
-import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 
 const CLI_PATH = join(import.meta.dir, '../../src/features/cli/cli.ts')
+const TEST_STEALTH_HOME = resolve(tmpdir(), 'stealth-test-e2e')
 
 function runCli(...args: string[]): {
   status: number
@@ -13,7 +15,7 @@ function runCli(...args: string[]): {
     encoding: 'utf8',
     env: {
       ...process.env,
-      STEALTH_HOME: '/tmp/stealth-test-e2e',
+      STEALTH_HOME: TEST_STEALTH_HOME,
     },
   })
   return {

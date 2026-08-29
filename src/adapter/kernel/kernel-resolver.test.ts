@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import { lstat, mkdir, readlink, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import { resolveEngineExecutable } from './kernel-resolver'
 
-const TEST_DIR = join('/tmp/stealth-kernel-resolver-test', Math.random().toString(36).slice(2))
+const TEST_DIR = resolve(
+  tmpdir(),
+  'stealth-kernel-resolver-test',
+  Math.random().toString(36).slice(2),
+)
 
 describe('Adapter: Unified Kernel Resolver', () => {
   it('creates unified symlink and resolves executable for app bundles and binary files', async () => {
@@ -17,7 +22,7 @@ describe('Adapter: Unified Kernel Resolver', () => {
     expect(linkStat.isSymbolicLink()).toBe(true)
 
     const target = await readlink(linkPath)
-    expect(target).toBe(fakeApp)
+    expect(resolve(target)).toBe(resolve(fakeApp))
     expect(execPath).toContain(join('Contents', 'MacOS', 'Chromium'))
 
     await rm(TEST_DIR, { recursive: true, force: true }).catch(() => {})

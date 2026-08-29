@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { resolve } from 'node:path'
 import { FileStoreAdapter } from '@/adapter/store/file-store.adapter'
 import { ProfileManager } from './profile-manager'
 
-const VAULT_DIR = join('/tmp/stealth-pm-test', Math.random().toString(36).slice(2))
+const VAULT_DIR = resolve(tmpdir(), 'stealth-pm-test', Math.random().toString(36).slice(2))
 
 describe('Feature: ProfileManager', () => {
   it('creates, lists and deletes profiles using the configured engine', async () => {

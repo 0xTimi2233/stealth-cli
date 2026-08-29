@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import { createProfileEntity } from '@/domain/profile'
 import { FileStoreAdapter } from './file-store.adapter'
 
-const TEST_VAULT = join('/tmp/stealth-store-test', Math.random().toString(36).slice(2))
+const TEST_VAULT = resolve(tmpdir(), 'stealth-store-test', Math.random().toString(36).slice(2))
 
 describe('Adapter: FileStoreAdapter', () => {
   it('isolates profiles and user-data by adapter', async () => {
