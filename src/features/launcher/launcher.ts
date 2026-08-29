@@ -1,6 +1,7 @@
 import { randomInt } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { StealthDefaultsConfig } from '@/domain/config'
 import type { LaunchRequest, LaunchResult } from '@/domain/launch'
 import { createProfileEntity } from '@/domain/profile'
 import type { EnginePort } from '@/port/engine.port'
@@ -11,6 +12,7 @@ export async function launchProfile(
   incomingArgs: string[],
   engine: EnginePort,
   store: ProfileStorePort,
+  defaults?: StealthDefaultsConfig,
 ): Promise<LaunchResult> {
   const profileName = name || 'ephemeral'
   let profile = name ? await store.get(name, engine.name) : null
@@ -20,7 +22,7 @@ export async function launchProfile(
   }
 
   if (!profile) {
-    profile = createProfileEntity(profileName)
+    profile = createProfileEntity(profileName, defaults)
   }
 
   const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
