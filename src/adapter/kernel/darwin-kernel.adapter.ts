@@ -22,14 +22,17 @@ export class DarwinKernelAdapter implements KernelResolverPort {
     const engineDir = join(this.getHome(), 'engines', engine)
     await mkdir(engineDir, { recursive: true })
 
-    const linkName = basename(binaryPath)
+    const lastAppIndex = binaryPath.lastIndexOf('.app')
+    const realBundlePath =
+      lastAppIndex >= 0 ? binaryPath.slice(0, lastAppIndex + 4) : binaryPath
+    const linkName = basename(realBundlePath)
     const linkPath = join(engineDir, linkName)
 
-    if (linkPath !== binaryPath) {
+    if (linkPath !== realBundlePath) {
       let needsLink = true
       try {
         const currentTarget = await readlink(linkPath)
-        if (currentTarget === binaryPath) {
+        if (currentTarget === realBundlePath) {
           needsLink = false
         }
       } catch {
@@ -38,7 +41,7 @@ export class DarwinKernelAdapter implements KernelResolverPort {
 
       if (needsLink) {
         await rm(linkPath, { recursive: true, force: true }).catch(() => {})
-        await symlink(binaryPath, linkPath)
+        await symlink(realBundlePath, linkPath)
       }
     }
 
