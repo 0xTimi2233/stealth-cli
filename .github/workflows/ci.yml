@@ -17,13 +17,11 @@ concurrency:
 
 jobs:
   checks:
-    name: 质量与测试门禁
     permissions:
       contents: read
     uses: ./.github/workflows/checks.yml
 
   security:
-    name: 安全门禁
     permissions:
       contents: read
       security-events: write
