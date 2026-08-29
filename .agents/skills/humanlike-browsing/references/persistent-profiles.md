@@ -10,9 +10,8 @@
 
 ### 2. 会话挂载启动
 
-通过前置声明 `PRISM_PROFILE` 或 `STEALTH_PROFILE` 环境变量将执行会话与目标持久环境绑定：
+通过前置声明 `PRISM_PROFILE` 环境变量将执行会话与目标持久环境绑定：
 - 以环境名称挂载：`PRISM_PROFILE="<name>" agent-browser --session <id> open <url>`
-- 指定特定引擎挂载：`STEALTH_ENGINE=cloak PRISM_PROFILE="<name>" agent-browser --session <id> open <url>`
 
 ### 3. 生命周期纪律
 
