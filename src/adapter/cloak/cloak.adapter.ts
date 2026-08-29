@@ -35,6 +35,7 @@ export class CloakAdapter implements EnginePort {
       args: [
         `--user-data-dir=${request.userDataDir}`,
         `--fingerprint=${request.profile.seed}`,
+        `--accept-lang=${request.profile.acceptLanguages}`,
         `--window-size=${request.profile.screenWidth},${request.profile.screenHeight}`,
         ...(request.profile.proxy ? [`--proxy-server=${request.profile.proxy}`] : []),
         ...sanitizedIncoming,

@@ -146,7 +146,7 @@ export async function handleCliCommand(
       }
 
       const extraArgs = filterOutFlag(remainingArgs, '--profile')
-      const result = await launchProfile(targetProfile, extraArgs, engine, store)
+      const result = await launchProfile(targetProfile, extraArgs, engine, store, config.defaults)
 
       result.process.on('error', (err) => {
         console.error(`Error launching kernel: ${err.message}`)
