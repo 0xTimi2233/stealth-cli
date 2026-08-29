@@ -32,7 +32,6 @@ export class CloakAdapter implements EnginePort {
     const launchOpts = await buildLaunchOptions({
       timezone: request.profile.timezone,
       locale: request.profile.language,
-      headless: true,
       args: [
         `--user-data-dir=${request.userDataDir}`,
         `--fingerprint=${request.profile.seed}`,
