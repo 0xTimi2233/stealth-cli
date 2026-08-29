@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import { spawnSync } from 'node:child_process'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 
-const AGENT_BROWSER_BIN = '/Users/sony/.bun/bin/agent-browser'
+const AGENT_BROWSER_BIN =
+  process.env.AGENT_BROWSER_BIN || join(homedir(), '.bun/bin/agent-browser')
+const STEALTH_LAUNCHER_PATH = join(
+  import.meta.dir,
+  '../../src/features/cli/cli.ts',
+)
 
 function execAgentBrowser(
   session: string,
@@ -12,6 +19,7 @@ function execAgentBrowser(
     encoding: 'utf8',
     env: {
       ...process.env,
+      AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
       ...env,
     },
   })
@@ -56,7 +64,11 @@ describe('Real Browser E2E Runner (Deterministic & Non-semantic)', () => {
       )
       expect(gpuOut.toLowerCase()).not.toContain('swiftshader')
     } finally {
-      execAgentBrowser(session, ['close']).catch?.(() => {})
+      try {
+        execAgentBrowser(session, ['close'])
+      } catch {
+        // cleanup suppression
+      }
     }
   })
 
@@ -77,7 +89,11 @@ describe('Real Browser E2E Runner (Deterministic & Non-semantic)', () => {
       })
       expect(titleOut).toContain('Example Domain')
     } finally {
-      execAgentBrowser(session, ['close']).catch?.(() => {})
+      try {
+        execAgentBrowser(session, ['close'])
+      } catch {
+        // cleanup suppression
+      }
     }
   })
 })

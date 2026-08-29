@@ -5,17 +5,53 @@ import { PrismAdapter } from '@/adapter/prism/prism.adapter'
 import { FileStoreAdapter } from '@/adapter/store/file-store.adapter'
 import type { StealthConfig } from '@/domain/config'
 import type { EngineType } from '@/domain/launch'
+import { createProfileEntity } from '@/domain/profile'
 import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
 import { launchProfile } from '../launcher/launcher'
 import { ProfileManager } from '../profile/profile-manager'
 
-function parseOption(args: string[], flag: string): string | undefined {
-  const index = args.indexOf(flag)
-  if (index >= 0 && index + 1 < args.length) {
-    return args[index + 1]
+export function parseOption(args: string[], flag: string): string | undefined {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === flag && i + 1 < args.length) {
+      return args[i + 1]
+    }
+    if (arg.startsWith(`${flag}=`)) {
+      return arg.slice(flag.length + 1)
+    }
   }
   return undefined
+}
+
+export function extractPositionalArg(args: string[]): string | undefined {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg.startsWith('--')) {
+      if (!arg.includes('=')) {
+        i++ // 跳过当前 flag 对应的后续值
+      }
+      continue
+    }
+    return arg
+  }
+  return undefined
+}
+
+export function filterOutFlag(args: string[], flag: string): string[] {
+  const result: string[] = []
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === flag) {
+      i++ // 跳过值
+      continue
+    }
+    if (arg.startsWith(`${flag}=`)) {
+      continue
+    }
+    result.push(arg)
+  }
+  return result
 }
 
 export async function handleCliCommand(
@@ -50,7 +86,7 @@ export async function handleCliCommand(
     }
 
     case 'create': {
-      const name = remainingArgs.find((a) => !a.startsWith('--'))
+      const name = extractPositionalArg(remainingArgs)
       if (!name) {
         throw new Error('Profile name is required for create')
       }
@@ -66,7 +102,7 @@ export async function handleCliCommand(
     }
 
     case 'delete': {
-      const name = remainingArgs[0]
+      const name = extractPositionalArg(remainingArgs)
       if (!name) {
         throw new Error('Profile name is required for delete')
       }
@@ -82,25 +118,21 @@ export async function handleCliCommand(
           `Profile '${name}' not found for engine '${activeEngineType}'`,
         )
       }
-      const p = profile || {
-        name: 'ephemeral',
-        seed: 12345,
-        timezone: config.defaults.timezone,
-        language: config.defaults.language,
-        acceptLanguages: config.defaults.acceptLanguages,
-        screenWidth: config.defaults.screenWidth,
-        screenHeight: config.defaults.screenHeight,
-        createdAt: '',
-        updatedAt: '',
-      }
+      const p =
+        profile ||
+        createProfileEntity('ephemeral', {
+          timezone: config.defaults.timezone,
+          language: config.defaults.language,
+          acceptLanguages: config.defaults.acceptLanguages,
+          screenWidth: config.defaults.screenWidth,
+          screenHeight: config.defaults.screenHeight,
+        })
       const userDataDir = store.resolveUserDataDir(p.name, activeEngineType)
       const args = await engine.buildArgs({
         profile: p,
         engine: activeEngineType,
         userDataDir,
-        incomingArgs: remainingArgs.filter(
-          (a) => a !== '--profile' && a !== name,
-        ),
+        incomingArgs: filterOutFlag(remainingArgs, '--profile'),
       })
       return JSON.stringify(args)
     }
@@ -113,9 +145,7 @@ export async function handleCliCommand(
         targetProfile = profileOpt
       }
 
-      const extraArgs = remainingArgs.filter(
-        (a) => a !== '--profile' && a !== targetProfile,
-      )
+      const extraArgs = filterOutFlag(remainingArgs, '--profile')
       const result = await launchProfile(
         targetProfile,
         extraArgs,
@@ -131,6 +161,15 @@ export async function handleCliCommand(
       result.process.on('exit', (code) => {
         process.exit(code ?? 0)
       })
+
+      // 转发进程信号，彻底避免孤儿进程残留
+      const forwardSignal = (sig: NodeJS.Signals) => {
+        if (!result.process.killed) {
+          result.process.kill(sig)
+        }
+      }
+      process.on('SIGINT', () => forwardSignal('SIGINT'))
+      process.on('SIGTERM', () => forwardSignal('SIGTERM'))
 
       return ''
     }

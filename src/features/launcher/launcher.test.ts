@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import type { LaunchRequest } from '@/domain/launch'
 import { createProfileEntity } from '@/domain/profile'
 import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
@@ -17,7 +18,7 @@ describe('Feature: Launcher', () => {
       delete: async () => true,
     }
 
-    let capturedRequest: unknown = null
+    let capturedRequest: LaunchRequest | null = null
 
     const mockEngine: EnginePort = {
       name: 'prism',
@@ -47,7 +48,7 @@ describe('Feature: Launcher', () => {
 
     expect(result.pid).toBe(1234)
     expect(result.engine).toBe('prism')
-    expect(capturedRequest?.userDataDir).toBe(
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
       '/vault/prism/profiles/test-account/user-data',
     )
     expect(result.effectiveArgs).toContain('--remote-debugging-pipe')

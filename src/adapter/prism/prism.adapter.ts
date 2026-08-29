@@ -1,18 +1,26 @@
 import { spawn } from 'node:child_process'
 import { hostHardwareSnapshot } from '@prism/main/host-hardware'
 import { buildLaunchArgs } from '@prism/main/launch-args'
-import { ensureEngineSymlink } from '@/adapter/symlink'
+import { createPlatformKernelResolver } from '@/adapter/kernel/kernel-resolver.factory'
 import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
 import type { EnginePort } from '@/port/engine.port'
+import type { KernelResolverPort } from '@/port/kernel-resolver.port'
 import { toPrismBrowserProfile } from './prism.mapper'
 
 export class PrismAdapter implements EnginePort {
   readonly name: EngineType = 'prism'
 
-  constructor(private readonly rawKernelPath: string) {}
+  private readonly kernelResolver: KernelResolverPort
+
+  constructor(
+    private readonly rawKernelPath: string,
+    kernelResolver?: KernelResolverPort,
+  ) {
+    this.kernelResolver = kernelResolver || createPlatformKernelResolver()
+  }
 
   async getKernelPath(): Promise<string> {
-    return ensureEngineSymlink(this.name, this.rawKernelPath)
+    return this.kernelResolver.resolveExecutable(this.name, this.rawKernelPath)
   }
 
   async buildArgs(request: LaunchRequest): Promise<string[]> {
@@ -21,6 +29,7 @@ export class PrismAdapter implements EnginePort {
 
     const officialArgs = buildLaunchArgs(prismProfile, {
       userDataDir: request.userDataDir,
+      proxyUrl: request.profile.proxy,
       fingerprintKernel: true,
       hostHardwareConcurrency: hostHw.hardwareConcurrency,
       hostPlatformVersion: hostHw.platformVersion,

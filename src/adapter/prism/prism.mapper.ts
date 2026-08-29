@@ -20,6 +20,7 @@ export function toPrismBrowserProfile(domainProfile: Profile): BrowserProfile {
     serialNumber: 0,
     name: domainProfile.name,
     status: 'closed',
+    favorite: false,
     startUrls: [],
     createdAt: domainProfile.createdAt,
     updatedAt: domainProfile.updatedAt,

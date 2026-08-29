@@ -11,7 +11,6 @@ export function toCloakLaunchOptions(request: LaunchRequest): LaunchOptions {
   const args: string[] = [
     `--user-data-dir=${request.userDataDir}`,
     `--fingerprint=${request.profile.seed}`,
-    `--fingerprint-platform=macos`,
     `--window-size=${request.profile.screenWidth},${request.profile.screenHeight}`,
     ...sanitizedExtra,
   ]

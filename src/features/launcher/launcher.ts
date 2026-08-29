@@ -1,3 +1,6 @@
+import { randomInt } from 'node:crypto'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { LaunchRequest, LaunchResult } from '@/domain/launch'
 import { createProfileEntity } from '@/domain/profile'
 import type { EnginePort } from '@/port/engine.port'
@@ -25,7 +28,13 @@ export async function launchProfile(
     ?.split('=')[1]
 
   const userDataDir =
-    incomingUserData || store.resolveUserDataDir(profileName, engine.name)
+    incomingUserData ||
+    (name
+      ? store.resolveUserDataDir(profileName, engine.name)
+      : join(
+          tmpdir(),
+          `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`,
+        ))
 
   const request: LaunchRequest = {
     profile,

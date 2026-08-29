@@ -1,17 +1,25 @@
 import { spawn } from 'node:child_process'
 import { buildArgs as buildCloakOfficialArgs } from '@cloak/args'
-import { ensureEngineSymlink } from '@/adapter/symlink'
+import { createPlatformKernelResolver } from '@/adapter/kernel/kernel-resolver.factory'
 import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
 import type { EnginePort } from '@/port/engine.port'
+import type { KernelResolverPort } from '@/port/kernel-resolver.port'
 import { toCloakLaunchOptions } from './cloak.mapper'
 
 export class CloakAdapter implements EnginePort {
   readonly name: EngineType = 'cloak'
 
-  constructor(private readonly rawKernelPath: string) {}
+  private readonly kernelResolver: KernelResolverPort
+
+  constructor(
+    private readonly rawKernelPath: string,
+    kernelResolver?: KernelResolverPort,
+  ) {
+    this.kernelResolver = kernelResolver || createPlatformKernelResolver()
+  }
 
   async getKernelPath(): Promise<string> {
-    return ensureEngineSymlink(this.name, this.rawKernelPath)
+    return this.kernelResolver.resolveExecutable(this.name, this.rawKernelPath)
   }
 
   async buildArgs(request: LaunchRequest): Promise<string[]> {
