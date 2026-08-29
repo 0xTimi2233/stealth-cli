@@ -1,0 +1,3 @@
+interface:
+  display_name: "Humanlike Browsing"
+  short_description: "驱动无头浏览器以会话隔离与环境调度穿透安全质询并完成页面交互"
