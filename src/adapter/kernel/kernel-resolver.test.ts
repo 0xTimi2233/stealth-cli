@@ -18,7 +18,7 @@ describe('Adapter: Unified Kernel Resolver', () => {
 
     const target = await readlink(linkPath)
     expect(target).toBe(fakeApp)
-    expect(execPath).toContain('Contents/MacOS/Chromium')
+    expect(execPath).toContain(join('Contents', 'MacOS', 'Chromium'))
 
     await rm(TEST_DIR, { recursive: true, force: true }).catch(() => {})
   })

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { join } from 'node:path'
 import { TomlConfigAdapter } from './toml-config.adapter'
 
 describe('Adapter: TomlConfigAdapter', () => {
@@ -9,7 +10,7 @@ describe('Adapter: TomlConfigAdapter', () => {
     expect(config.engine).toBe('prism')
     expect(config.defaults.timezone).toBe('Asia/Tokyo')
     expect(config.defaults.language).toBe('en-US')
-    expect(config.engines.prism.binaryPath).toContain('engines/prism/current')
-    expect(config.engines.cloak.binaryPath).toContain('engines/cloak/current')
+    expect(config.engines.prism.binaryPath).toContain(join('engines', 'prism', 'current'))
+    expect(config.engines.cloak.binaryPath).toContain(join('engines', 'cloak', 'current'))
   })
 })
