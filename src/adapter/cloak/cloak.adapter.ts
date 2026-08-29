@@ -15,11 +15,8 @@ export class CloakAdapter implements EnginePort {
       if (existsSync(this.rawKernelPath)) {
         return await resolveEngineExecutable(this.name, this.rawKernelPath)
       }
-    } catch {
-      // 路径未就绪时向下由官方自动寻址/下载
-    }
+    } catch {}
 
-    // 官方自动下载与缓存寻址：若本地未安装，自动拉取对应平台的最新内核
     const officialBinary = await ensureBinary()
     return resolveEngineExecutable(this.name, officialBinary)
   }

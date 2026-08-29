@@ -17,7 +17,6 @@ describe('Integration: Dual Engine Pipeline', () => {
     const prismAdapter = new PrismAdapter(config.engines.prism.binaryPath)
     const cloakAdapter = new CloakAdapter(config.engines.cloak.binaryPath)
 
-    // 1. 在 Prism 引擎下创建环境
     const pmPrism = new ProfileManager(store, 'prism', config.defaults)
     const pPrism = await pmPrism.create('worker-tokyo', {
       timezone: 'Asia/Tokyo',
@@ -35,7 +34,6 @@ describe('Integration: Dual Engine Pipeline', () => {
       prismArgs.some((a) => a.includes(join('prism', 'profiles', 'worker-tokyo', 'user-data'))),
     ).toBe(true)
 
-    // 2. 在 Cloak 引擎下创建同名环境 (物理数据隔离)
     const pmCloak = new ProfileManager(store, 'cloak', config.defaults)
     const pCloak = await pmCloak.create('worker-tokyo', {
       timezone: 'America/New_York',

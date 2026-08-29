@@ -17,7 +17,6 @@ export async function resolveEngineExecutable(
   const linkName = basename(realBundlePath)
   const linkPath = join(engineDir, linkName)
 
-  // 防止自引用产生死循环 (ELOOP)
   if (linkPath !== realBundlePath) {
     let needsLink = true
     try {
