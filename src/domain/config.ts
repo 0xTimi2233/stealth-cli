@@ -1,20 +1,20 @@
-import type { EngineType } from "./launch";
+import type { EngineType } from './launch'
 
 export interface StealthEngineConfig {
-	binaryPath: string;
+  binaryPath: string
 }
 
 export interface StealthDefaultsConfig {
-	timezone: string;
-	language: string;
-	acceptLanguages: string;
-	screenWidth: number;
-	screenHeight: number;
+  timezone: string
+  language: string
+  acceptLanguages: string
+  screenWidth: number
+  screenHeight: number
 }
 
 export interface StealthConfig {
-	engine: EngineType;
-	vaultRoot: string;
-	engines: Record<EngineType, StealthEngineConfig>;
-	defaults: StealthDefaultsConfig;
+  engine: EngineType
+  vaultRoot: string
+  engines: Record<EngineType, StealthEngineConfig>
+  defaults: StealthDefaultsConfig
 }
