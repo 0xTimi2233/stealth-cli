@@ -7,15 +7,16 @@ import type {
 	LaunchResult,
 } from "../../domain/launch";
 import type { EnginePort } from "../../port/engine.port";
+import { resolveBinaryPath } from "../resolve-binary";
 import { toPrismBrowserProfile } from "./prism.mapper";
 
 export class PrismAdapter implements EnginePort {
 	readonly name: EngineType = "prism";
 
-	constructor(private readonly kernelPath: string) {}
+	constructor(private readonly rawKernelPath: string) {}
 
 	getKernelPath(): string {
-		return this.kernelPath;
+		return resolveBinaryPath(this.rawKernelPath);
 	}
 
 	async buildArgs(request: LaunchRequest): Promise<string[]> {
@@ -43,7 +44,7 @@ export class PrismAdapter implements EnginePort {
 
 	async launch(request: LaunchRequest): Promise<LaunchResult> {
 		const effectiveArgs = await this.buildArgs(request);
-		const proc = spawn(this.kernelPath, effectiveArgs, {
+		const proc = spawn(this.getKernelPath(), effectiveArgs, {
 			stdio: "inherit",
 			windowsHide: false,
 		});
