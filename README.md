@@ -53,7 +53,7 @@ screen_height = 900
 | :--- | :--- | :--- |
 | `STEALTH_HOME` | `~/.stealth` | stealth-cli 根配置与存储目录 |
 | `STEALTH_ENGINE` | 读 config.toml | 动态覆盖当前激活引擎（`prism` \| `cloak`） |
-| `STEALTH_PROFILE` / `PRISM_PROFILE` | - | Launcher 默认绑定的目标 Profile 名称 |
+| `PROFILE` | - | Launcher 默认绑定的目标 Profile 名称 |
 | `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `/usr/local/bin/stealth-launcher` 供 agent-browser 挂载 |
 
 ## CLI 指令契约
@@ -165,10 +165,7 @@ export AGENT_BROWSER_EXECUTABLE_PATH="/Users/sony/.local/bin/stealth-launcher"
 在日常执行或 Agent 调度时：
 ```bash
 # 挂载指定环境运行
-PRISM_PROFILE="worker-1" agent-browser open https://example.com
-
-# 动态切换引擎运行同一个环境名称
-STEALTH_ENGINE=cloak PRISM_PROFILE="worker-1" agent-browser open https://example.com
+PROFILE="worker-1" agent-browser open https://example.com
 ```
 
 ### 2. 与 Playwright 集成

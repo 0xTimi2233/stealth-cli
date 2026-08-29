@@ -139,7 +139,7 @@ export async function handleCliCommand(
     }
 
     case 'launch': {
-      let targetProfile = process.env.PRISM_PROFILE || process.env.STEALTH_PROFILE
+      let targetProfile = process.env.PROFILE
       const profileOpt = parseOption(remainingArgs, '--profile')
       if (profileOpt) {
         targetProfile = profileOpt
