@@ -4,10 +4,7 @@ import { join } from 'node:path'
 import { createProfileEntity } from '@/domain/profile'
 import { FileStoreAdapter } from './file-store.adapter'
 
-const TEST_VAULT = join(
-  '/tmp/stealth-store-test',
-  Math.random().toString(36).slice(2),
-)
+const TEST_VAULT = join('/tmp/stealth-store-test', Math.random().toString(36).slice(2))
 
 describe('Adapter: FileStoreAdapter', () => {
   it('isolates profiles and user-data by adapter', async () => {
@@ -16,12 +13,8 @@ describe('Adapter: FileStoreAdapter', () => {
     const prismUserDir = store.resolveUserDataDir('alpha', 'prism')
     const cloakUserDir = store.resolveUserDataDir('alpha', 'cloak')
 
-    expect(prismUserDir).toBe(
-      join(TEST_VAULT, 'prism/profiles/alpha/user-data'),
-    )
-    expect(cloakUserDir).toBe(
-      join(TEST_VAULT, 'cloak/profiles/alpha/user-data'),
-    )
+    expect(prismUserDir).toBe(join(TEST_VAULT, 'prism/profiles/alpha/user-data'))
+    expect(cloakUserDir).toBe(join(TEST_VAULT, 'cloak/profiles/alpha/user-data'))
 
     const profilePrism = createProfileEntity('alpha', {
       timezone: 'Asia/Tokyo',

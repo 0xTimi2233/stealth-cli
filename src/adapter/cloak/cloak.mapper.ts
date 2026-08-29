@@ -3,9 +3,7 @@ import type { LaunchRequest } from '@/domain/launch'
 
 export function toCloakLaunchOptions(request: LaunchRequest): LaunchOptions {
   const sanitizedExtra = request.incomingArgs.filter(
-    (arg) =>
-      !arg.includes('--enable-automation') &&
-      !arg.includes('--enable-unsafe-swiftshader'),
+    (arg) => !arg.includes('--enable-automation') && !arg.includes('--enable-unsafe-swiftshader'),
   )
 
   const args: string[] = [

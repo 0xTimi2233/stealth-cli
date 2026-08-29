@@ -8,17 +8,10 @@ export class LinuxKernelAdapter implements KernelResolverPort {
   constructor(private readonly stealthHome?: string) {}
 
   private getHome(): string {
-    return (
-      this.stealthHome ||
-      process.env.STEALTH_HOME ||
-      join(homedir(), '.stealth')
-    )
+    return this.stealthHome || process.env.STEALTH_HOME || join(homedir(), '.stealth')
   }
 
-  async resolveExecutable(
-    engine: EngineType,
-    binaryPath: string,
-  ): Promise<string> {
+  async resolveExecutable(engine: EngineType, binaryPath: string): Promise<string> {
     const engineDir = join(this.getHome(), 'engines', engine)
     await mkdir(engineDir, { recursive: true })
 

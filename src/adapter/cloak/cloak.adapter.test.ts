@@ -20,9 +20,7 @@ describe('Adapter: CloakAdapter', () => {
 
     expect(args).toBeArray()
     expect(args.some((a) => a === '--fingerprint=9966')).toBe(true)
-    expect(
-      args.some((a) => a === '--fingerprint-timezone=America/New_York'),
-    ).toBe(true)
+    expect(args.some((a) => a === '--fingerprint-timezone=America/New_York')).toBe(true)
     expect(args.some((a) => a === '--fingerprint-locale=en-US')).toBe(true)
     expect(args.some((a) => a === '--lang=en-US')).toBe(true)
     // 必须确保排除了自动化特征

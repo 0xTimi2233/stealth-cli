@@ -32,12 +32,7 @@ describe('CLI E2E', () => {
   })
 
   it('creates, inspects launch-args, and deletes a profile via clean JSON output', () => {
-    const createRes = runCli(
-      'create',
-      'e2e-account',
-      '--timezone',
-      'Asia/Tokyo',
-    )
+    const createRes = runCli('create', 'e2e-account', '--timezone', 'Asia/Tokyo')
     expect(createRes.status).toBe(0)
     const created = JSON.parse(createRes.stdout)
     expect(created.success).toBe(true)

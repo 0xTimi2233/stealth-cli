@@ -23,18 +23,13 @@ export async function launchProfile(
     profile = createProfileEntity(profileName)
   }
 
-  const incomingUserData = incomingArgs
-    .find((a) => a.startsWith('--user-data-dir='))
-    ?.split('=')[1]
+  const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
 
   const userDataDir =
     incomingUserData ||
     (name
       ? store.resolveUserDataDir(profileName, engine.name)
-      : join(
-          tmpdir(),
-          `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`,
-        ))
+      : join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`))
 
   const request: LaunchRequest = {
     profile,

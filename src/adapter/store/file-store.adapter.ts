@@ -33,17 +33,10 @@ export class FileStoreAdapter implements ProfileStorePort {
     }
   }
 
-  private async writePayload(
-    engine: EngineType,
-    payload: StoreFilePayload,
-  ): Promise<void> {
+  private async writePayload(engine: EngineType, payload: StoreFilePayload): Promise<void> {
     const dir = this.adapterVault(engine)
     await mkdir(dir, { recursive: true })
-    await writeFile(
-      this.storeFilePath(engine),
-      JSON.stringify(payload, null, 2),
-      'utf8',
-    )
+    await writeFile(this.storeFilePath(engine), JSON.stringify(payload, null, 2), 'utf8')
   }
 
   async list(engine: EngineType): Promise<Profile[]> {

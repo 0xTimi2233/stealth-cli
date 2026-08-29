@@ -24,8 +24,7 @@ export class TomlConfigAdapter implements ConfigPort {
       // Missing or unreadable config falls back directly to default SSOT specification
     }
 
-    const engineRaw =
-      typeof parsed.engine === 'string' ? parsed.engine : 'prism'
+    const engineRaw = typeof parsed.engine === 'string' ? parsed.engine : 'prism'
     const engine: EngineType = engineRaw === 'cloak' ? 'cloak' : 'prism'
 
     const enginesObj = (
@@ -33,9 +32,7 @@ export class TomlConfigAdapter implements ConfigPort {
     ) as Record<string, { binary_path?: string }>
 
     const defaultsObj = (
-      parsed.defaults && typeof parsed.defaults === 'object'
-        ? parsed.defaults
-        : {}
+      parsed.defaults && typeof parsed.defaults === 'object' ? parsed.defaults : {}
     ) as {
       fingerprint?: {
         timezone?: string
@@ -53,14 +50,10 @@ export class TomlConfigAdapter implements ConfigPort {
       vaultRoot: join(home, 'vault'),
       engines: {
         prism: {
-          binaryPath:
-            enginesObj.prism?.binary_path ||
-            join(home, 'engines/prism/current'),
+          binaryPath: enginesObj.prism?.binary_path || join(home, 'engines/prism/current'),
         },
         cloak: {
-          binaryPath:
-            enginesObj.cloak?.binary_path ||
-            join(home, 'engines/cloak/current'),
+          binaryPath: enginesObj.cloak?.binary_path || join(home, 'engines/cloak/current'),
         },
       },
       defaults: {

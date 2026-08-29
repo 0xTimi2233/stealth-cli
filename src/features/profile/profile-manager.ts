@@ -1,10 +1,6 @@
 import type { StealthDefaultsConfig } from '@/domain/config'
 import type { EngineType } from '@/domain/launch'
-import {
-  createProfileEntity,
-  type Profile,
-  type ProfileDraftOptions,
-} from '@/domain/profile'
+import { createProfileEntity, type Profile, type ProfileDraftOptions } from '@/domain/profile'
 import type { ProfileStorePort } from '@/port/store.port'
 
 export class ProfileManager {
@@ -22,15 +18,10 @@ export class ProfileManager {
     return this.store.get(name, this.engine)
   }
 
-  async create(
-    name: string,
-    options: ProfileDraftOptions = {},
-  ): Promise<Profile> {
+  async create(name: string, options: ProfileDraftOptions = {}): Promise<Profile> {
     const existing = await this.get(name)
     if (existing) {
-      throw new Error(
-        `Profile '${name}' already exists in engine '${this.engine}'`,
-      )
+      throw new Error(`Profile '${name}' already exists in engine '${this.engine}'`)
     }
 
     const profile = createProfileEntity(name, {

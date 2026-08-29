@@ -38,10 +38,7 @@ export class PrismAdapter implements EnginePort {
     const officialFlagKeys = new Set(officialArgs.map((a) => a.split('=')[0]))
     const extraArgs = request.incomingArgs.filter((arg) => {
       const key = arg.split('=')[0]
-      return (
-        !officialFlagKeys.has(key) &&
-        !arg.includes('--enable-unsafe-swiftshader')
-      )
+      return !officialFlagKeys.has(key) && !arg.includes('--enable-unsafe-swiftshader')
     })
 
     return [...officialArgs, ...extraArgs]

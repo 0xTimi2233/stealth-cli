@@ -29,14 +29,9 @@ export function validateProfileName(name: string): boolean {
   return typeof name === 'string' && name.length > 0 && NAME_PATTERN.test(name)
 }
 
-export function createProfileEntity(
-  name: string,
-  options: ProfileDraftOptions = {},
-): Profile {
+export function createProfileEntity(name: string, options: ProfileDraftOptions = {}): Profile {
   if (!validateProfileName(name)) {
-    throw new Error(
-      `Invalid profile name: '${name}'. Must match ${NAME_PATTERN}`,
-    )
+    throw new Error(`Invalid profile name: '${name}'. Must match ${NAME_PATTERN}`)
   }
 
   const now = new Date().toISOString()

@@ -3,12 +3,8 @@ import { spawnSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-const AGENT_BROWSER_BIN =
-  process.env.AGENT_BROWSER_BIN || join(homedir(), '.bun/bin/agent-browser')
-const STEALTH_LAUNCHER_PATH = join(
-  import.meta.dir,
-  '../../src/features/cli/cli.ts',
-)
+const AGENT_BROWSER_BIN = process.env.AGENT_BROWSER_BIN || join(homedir(), '.bun/bin/agent-browser')
+const STEALTH_LAUNCHER_PATH = join(import.meta.dir, '../../src/features/cli/cli.ts')
 
 function execAgentBrowser(
   session: string,
@@ -24,9 +20,7 @@ function execAgentBrowser(
     },
   })
   if (proc.status !== 0) {
-    throw new Error(
-      `agent-browser failed (${proc.status}): ${proc.stderr || proc.stdout}`,
-    )
+    throw new Error(`agent-browser failed (${proc.status}): ${proc.stderr || proc.stdout}`)
   }
   return proc.stdout.trim()
 }
@@ -35,13 +29,9 @@ describe('Real Browser E2E Runner (Deterministic & Non-semantic)', () => {
   it('launches real Chromium via Prism engine, executes DOM eval and closes cleanly', () => {
     const session = `e2e-prism-${Date.now()}`
     try {
-      const openOut = execAgentBrowser(
-        session,
-        ['open', 'https://example.com'],
-        {
-          STEALTH_ENGINE: 'prism',
-        },
-      )
+      const openOut = execAgentBrowser(session, ['open', 'https://example.com'], {
+        STEALTH_ENGINE: 'prism',
+      })
       expect(openOut).toContain('Example Domain')
 
       const titleOut = execAgentBrowser(session, ['eval', 'document.title'], {
@@ -75,13 +65,9 @@ describe('Real Browser E2E Runner (Deterministic & Non-semantic)', () => {
   it('launches real Chromium via Cloak engine, executes DOM eval and closes cleanly', () => {
     const session = `e2e-cloak-${Date.now()}`
     try {
-      const openOut = execAgentBrowser(
-        session,
-        ['open', 'https://example.com'],
-        {
-          STEALTH_ENGINE: 'cloak',
-        },
-      )
+      const openOut = execAgentBrowser(session, ['open', 'https://example.com'], {
+        STEALTH_ENGINE: 'cloak',
+      })
       expect(openOut).toContain('Example Domain')
 
       const titleOut = execAgentBrowser(session, ['eval', 'document.title'], {

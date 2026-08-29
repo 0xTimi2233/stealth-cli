@@ -22,9 +22,7 @@ describe('Adapter: PrismAdapter', () => {
     expect(args.some((a) => a.startsWith('--fingerprint='))).toBe(true)
     expect(args.some((a) => a === '--timezone=Asia/Tokyo')).toBe(true)
     expect(args.some((a) => a === '--lang=en-US')).toBe(true)
-    expect(args.some((a) => a === '--fingerprint-render-identity=v4')).toBe(
-      true,
-    )
+    expect(args.some((a) => a === '--fingerprint-render-identity=v4')).toBe(true)
     expect(args.some((a) => a === '--remote-debugging-pipe')).toBe(true)
   })
 })

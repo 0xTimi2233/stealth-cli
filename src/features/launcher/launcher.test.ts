@@ -10,8 +10,7 @@ describe('Feature: Launcher', () => {
     const fakeProfile = createProfileEntity('test-account')
 
     const mockStore: ProfileStorePort = {
-      resolveUserDataDir: (name, engine) =>
-        `/vault/${engine}/profiles/${name}/user-data`,
+      resolveUserDataDir: (name, engine) => `/vault/${engine}/profiles/${name}/user-data`,
       get: async (name) => (name === 'test-account' ? fakeProfile : null),
       list: async () => [fakeProfile],
       save: async () => {},

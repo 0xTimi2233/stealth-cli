@@ -43,12 +43,7 @@ describe('Feature: CLI Handler', () => {
     expect(Array.isArray(argsJson)).toBe(true)
     expect(argsJson.some((a: string) => a.includes('cli-test'))).toBe(true)
 
-    const delOut = await handleCliCommand(
-      ['delete', 'cli-test'],
-      config,
-      store,
-      engines,
-    )
+    const delOut = await handleCliCommand(['delete', 'cli-test'], config, store, engines)
     expect(JSON.parse(delOut).success).toBe(true)
   })
 })

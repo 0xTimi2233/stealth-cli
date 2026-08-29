@@ -60,18 +60,11 @@ export async function handleCliCommand(
   store: ProfileStorePort,
   engines: Record<EngineType, EnginePort>,
 ): Promise<string> {
-  const KNOWN_COMMANDS = new Set([
-    'list',
-    'create',
-    'delete',
-    'launch-args',
-    'launch',
-  ])
+  const KNOWN_COMMANDS = new Set(['list', 'create', 'delete', 'launch-args', 'launch'])
   const command = argv[0] && KNOWN_COMMANDS.has(argv[0]) ? argv[0] : 'launch'
   const remainingArgs = KNOWN_COMMANDS.has(argv[0] ?? '') ? argv.slice(1) : argv
 
-  const activeEngineType: EngineType =
-    (process.env.STEALTH_ENGINE as EngineType) || config.engine
+  const activeEngineType: EngineType = (process.env.STEALTH_ENGINE as EngineType) || config.engine
   const engine = engines[activeEngineType]
   if (!engine) {
     throw new Error(`Engine '${activeEngineType}' is not supported`)
@@ -114,9 +107,7 @@ export async function handleCliCommand(
       const name = parseOption(remainingArgs, '--profile')
       const profile = name ? await pm.get(name) : null
       if (name && !profile) {
-        throw new Error(
-          `Profile '${name}' not found for engine '${activeEngineType}'`,
-        )
+        throw new Error(`Profile '${name}' not found for engine '${activeEngineType}'`)
       }
       const p =
         profile ||
@@ -138,20 +129,14 @@ export async function handleCliCommand(
     }
 
     case 'launch': {
-      let targetProfile =
-        process.env.PRISM_PROFILE || process.env.STEALTH_PROFILE
+      let targetProfile = process.env.PRISM_PROFILE || process.env.STEALTH_PROFILE
       const profileOpt = parseOption(remainingArgs, '--profile')
       if (profileOpt) {
         targetProfile = profileOpt
       }
 
       const extraArgs = filterOutFlag(remainingArgs, '--profile')
-      const result = await launchProfile(
-        targetProfile,
-        extraArgs,
-        engine,
-        store,
-      )
+      const result = await launchProfile(targetProfile, extraArgs, engine, store)
 
       result.process.on('error', (err) => {
         console.error(`Error launching kernel: ${err.message}`)
