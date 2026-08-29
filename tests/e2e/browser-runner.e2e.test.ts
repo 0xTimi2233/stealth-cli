@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 const AGENT_BROWSER_BIN = process.env.AGENT_BROWSER_BIN || join(homedir(), '.bun/bin/agent-browser')
 const STEALTH_LAUNCHER_PATH = join(import.meta.dir, '../../src/features/cli/cli.ts')
+const hasAgentBrowser = existsSync(AGENT_BROWSER_BIN)
 
 function execAgentBrowser(
   session: string,
@@ -25,7 +27,7 @@ function execAgentBrowser(
   return proc.stdout.trim()
 }
 
-describe('Real Browser E2E Runner (Deterministic & Non-semantic)', () => {
+describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-semantic)', () => {
   it('launches real Chromium via Prism engine, executes DOM eval and closes cleanly', () => {
     const session = `e2e-prism-${Date.now()}`
     try {

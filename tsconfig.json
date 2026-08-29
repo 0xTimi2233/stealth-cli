@@ -16,10 +16,7 @@
     "noEmit": true,
 
     "paths": {
-      "@/*": ["./src/*"],
-      "@prism/*": ["../../githubs/Prism-Browser-Community/src/*"],
-      "@cloak/*": ["../../githubs/CloakBrowser/js/src/*"],
-      "playwright-core": ["./node_modules/playwright-core"]
+      "@/*": ["./src/*"]
     },
 
     // Best practices

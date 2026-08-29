@@ -16,5 +16,8 @@
   },
   "peerDependencies": {
     "typescript": "^7"
+  },
+  "dependencies": {
+    "cloakbrowser": "^0.5.9"
   }
 }

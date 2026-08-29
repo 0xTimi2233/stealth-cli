@@ -1,47 +1,24 @@
 import { spawn } from 'node:child_process'
-import { hostHardwareSnapshot } from '@prism/main/host-hardware'
-import { buildLaunchArgs } from '@prism/main/launch-args'
-import { createPlatformKernelResolver } from '@/adapter/kernel/kernel-resolver.factory'
+import { resolveEngineExecutable } from '@/adapter/kernel/kernel-resolver'
 import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
 import type { EnginePort } from '@/port/engine.port'
-import type { KernelResolverPort } from '@/port/kernel-resolver.port'
-import { toPrismBrowserProfile } from './prism.mapper'
+import { buildPrismOfficialArgs } from './prism-launch-args'
 
 export class PrismAdapter implements EnginePort {
   readonly name: EngineType = 'prism'
 
-  private readonly kernelResolver: KernelResolverPort
-
-  constructor(
-    private readonly rawKernelPath: string,
-    kernelResolver?: KernelResolverPort,
-  ) {
-    this.kernelResolver = kernelResolver || createPlatformKernelResolver()
-  }
+  constructor(private readonly rawKernelPath: string) {}
 
   async getKernelPath(): Promise<string> {
-    return this.kernelResolver.resolveExecutable(this.name, this.rawKernelPath)
+    return resolveEngineExecutable(this.name, this.rawKernelPath)
   }
 
   async buildArgs(request: LaunchRequest): Promise<string[]> {
-    const hostHw = hostHardwareSnapshot()
-    const prismProfile = toPrismBrowserProfile(request.profile)
-
-    const officialArgs = buildLaunchArgs(prismProfile, {
+    return buildPrismOfficialArgs(request.profile, {
       userDataDir: request.userDataDir,
       proxyUrl: request.profile.proxy,
-      fingerprintKernel: true,
-      hostHardwareConcurrency: hostHw.hardwareConcurrency,
-      hostPlatformVersion: hostHw.platformVersion,
+      incomingArgs: request.incomingArgs,
     })
-
-    const officialFlagKeys = new Set(officialArgs.map((a) => a.split('=')[0]))
-    const extraArgs = request.incomingArgs.filter((arg) => {
-      const key = arg.split('=')[0]
-      return !officialFlagKeys.has(key) && !arg.includes('--enable-unsafe-swiftshader')
-    })
-
-    return [...officialArgs, ...extraArgs]
   }
 
   async launch(request: LaunchRequest): Promise<LaunchResult> {

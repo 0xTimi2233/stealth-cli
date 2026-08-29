@@ -1,30 +1,37 @@
 import { spawn } from 'node:child_process'
-import { buildArgs as buildCloakOfficialArgs } from '@cloak/args'
-import { createPlatformKernelResolver } from '@/adapter/kernel/kernel-resolver.factory'
+import { buildLaunchOptions } from 'cloakbrowser'
+import { resolveEngineExecutable } from '@/adapter/kernel/kernel-resolver'
 import type { EngineType, LaunchRequest, LaunchResult } from '@/domain/launch'
 import type { EnginePort } from '@/port/engine.port'
-import type { KernelResolverPort } from '@/port/kernel-resolver.port'
-import { toCloakLaunchOptions } from './cloak.mapper'
 
 export class CloakAdapter implements EnginePort {
   readonly name: EngineType = 'cloak'
 
-  private readonly kernelResolver: KernelResolverPort
-
-  constructor(
-    private readonly rawKernelPath: string,
-    kernelResolver?: KernelResolverPort,
-  ) {
-    this.kernelResolver = kernelResolver || createPlatformKernelResolver()
-  }
+  constructor(private readonly rawKernelPath: string) {}
 
   async getKernelPath(): Promise<string> {
-    return this.kernelResolver.resolveExecutable(this.name, this.rawKernelPath)
+    return resolveEngineExecutable(this.name, this.rawKernelPath)
   }
 
   async buildArgs(request: LaunchRequest): Promise<string[]> {
-    const cloakOptions = toCloakLaunchOptions(request)
-    return buildCloakOfficialArgs(cloakOptions)
+    const sanitizedIncoming = request.incomingArgs.filter(
+      (arg) => !arg.includes('--enable-automation') && !arg.includes('--enable-unsafe-swiftshader'),
+    )
+
+    const launchOpts = await buildLaunchOptions({
+      timezone: request.profile.timezone,
+      locale: request.profile.language,
+      headless: true,
+      args: [
+        `--user-data-dir=${request.userDataDir}`,
+        `--fingerprint=${request.profile.seed}`,
+        `--window-size=${request.profile.screenWidth},${request.profile.screenHeight}`,
+        ...(request.profile.proxy ? [`--proxy-server=${request.profile.proxy}`] : []),
+        ...sanitizedIncoming,
+      ],
+    })
+
+    return (launchOpts.args as string[]) || []
   }
 
   async launch(request: LaunchRequest): Promise<LaunchResult> {
