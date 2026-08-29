@@ -157,7 +157,7 @@ export async function handleCliCommand(
         process.exit(code ?? 0)
       })
 
-      // 转发进程信号，彻底避免孤儿进程残留
+      // 转发进程终止信号至子进程
       const forwardSignal = (sig: NodeJS.Signals) => {
         if (!result.process.killed) {
           result.process.kill(sig)

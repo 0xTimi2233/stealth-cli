@@ -1,6 +1,6 @@
 # Stealth-CLI 双隐形引擎（Prism 144 vs Cloak 145）全量指纹与反检测对标报告
 
-**调度器版本**：`stealth-cli v0.1.1 (GitHub Release 独立单文件原生二进制)`  
+**调度器版本**：`stealth-cli`  
 **调度驱动协议**：`agent-browser (无头自动化透明代理)`  
 **测试平台**：macOS (Darwin arm64 / Apple Silicon)  
 **测试时间**：2026-08-29  

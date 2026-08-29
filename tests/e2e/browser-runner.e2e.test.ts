@@ -58,9 +58,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
     } finally {
       try {
         execAgentBrowser(session, ['close'])
-      } catch {
-        // cleanup suppression
-      }
+      } catch {}
     }
   })
 
@@ -79,9 +77,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
     } finally {
       try {
         execAgentBrowser(session, ['close'])
-      } catch {
-        // cleanup suppression
-      }
+      } catch {}
     }
   })
 })

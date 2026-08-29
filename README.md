@@ -6,7 +6,7 @@
 
 项目严格遵循 **DDD + 端口与适配器（六边形架构） + 业务垂直切片**：
 
-- `src/domain/`：领域实体与纯类型定义（Profile、LaunchRequest、LaunchResult），以自然名称 `name` 为主键，彻底废弃数字序号
+- `src/domain/`：领域实体与类型定义（Profile、LaunchRequest、LaunchResult），以环境名称 `name` 为唯一主键
 - `src/port/`：抽象出站端口契约（`EnginePort`、`ProfileStorePort`、`ConfigPort`）
 - `src/adapter/`：各引擎独立目录隔离，内置 ACL 防腐层与统一软链解析（`kernel-resolver.ts`），正式集成 `cloakbrowser` 官方库并内聚 Prism 参数算法
 - `src/features/`：端到端业务垂直切片（`profile/`、`launcher/`、`cli/`），切片自带单元测试
@@ -40,10 +40,10 @@ screen_height = 900
 
 ## 物理存储与软链自愈规范
 
-1. **先 Adapter 后 Profile 物理隔离**：
+1. **按 Adapter 隔离存储**：
    - Prism 数据：`~/.stealth/vault/prism/profiles/<name>/user-data`
    - Cloak 数据：`~/.stealth/vault/cloak/profiles/<name>/user-data`
-   彻底避免不同 Chromium 内核版本共用存储造成的数据库冲突。
+   隔离不同 Chromium 内核版本的用户数据目录，避免数据格式冲突。
 2. **统一软链自愈**：
    系统启动或执行 `stealth-cli install [engine]` 时，自动根据配置的 `binary_path` 在 `~/.stealth/engines/<engine>/` 下建立并校验规范软链。
 
