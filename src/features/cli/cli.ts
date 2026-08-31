@@ -6,10 +6,40 @@ import { FileStoreAdapter } from '@/adapter/store/file-store.adapter'
 import type { StealthConfig } from '@/domain/config'
 import type { EngineType } from '@/domain/launch'
 import { createProfileEntity } from '@/domain/profile'
+import { VERSION } from '@/domain/version'
+import { launchProfile } from '@/features/launcher/launcher'
+import { ProfileManager } from '@/features/profile/profile-manager'
 import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
-import { launchProfile } from '../launcher/launcher'
-import { ProfileManager } from '../profile/profile-manager'
+
+export function getHelpText(): string {
+  return `stealth-cli - 通用隐形浏览器调度套件与自动化代理层
+
+用法:
+  stealth-cli [命令] [选项]
+  stealth-cli [选项] [...Chromium 参数]
+
+可用命令:
+  list                          列出所有已保存的环境配置
+  create <name> [选项]          创建独立环境配置及其物理隔离数据目录
+  delete <name>                 删除指定的环境配置及其对应的数据目录
+  launch-args [选项]            获取当前选定引擎官方算法生成的指纹注入启动参数
+  install [engine]              校验内核并自愈建立指定引擎的规范软链 (prism | cloak)
+  launch [选项] [...参数]       启动指定环境或临时环境的隐形浏览器 (默认命令)
+
+常用选项:
+  -h, --help                    显示帮助说明
+  -v, --version                 显示版本信息
+  --profile <name>              指定目标环境名称
+  --timezone <tz>               指定时区 (如 Asia/Tokyo)
+  --language <lang>             指定语言 (如 en-US)
+  --proxy <url>                 指定代理服务器地址
+
+环境变量:
+  STEALTH_ENGINE                动态覆盖当前激活引擎 (prism | cloak)
+  PROFILE                       Launcher 默认绑定的目标 Profile 名称
+  STEALTH_HOME                  根配置与存储目录 (默认: ~/.stealth)`
+}
 
 export function parseOption(args: string[], flag: string): string | undefined {
   for (let i = 0; i < args.length; i++) {
@@ -60,6 +90,21 @@ export async function handleCliCommand(
   store: ProfileStorePort,
   engines: Record<EngineType, EnginePort>,
 ): Promise<string> {
+  const firstArg = argv[0]
+  if (
+    firstArg === 'help' ||
+    firstArg === '--help' ||
+    firstArg === '-h' ||
+    argv.includes('--help') ||
+    argv.includes('-h')
+  ) {
+    return getHelpText()
+  }
+
+  if (firstArg === 'version' || firstArg === '--version' || firstArg === '-v') {
+    return `stealth-cli v${VERSION}`
+  }
+
   const KNOWN_COMMANDS = new Set(['list', 'create', 'delete', 'launch-args', 'launch', 'install'])
   const command = argv[0] && KNOWN_COMMANDS.has(argv[0]) ? argv[0] : 'launch'
   const remainingArgs = KNOWN_COMMANDS.has(argv[0] ?? '') ? argv.slice(1) : argv
