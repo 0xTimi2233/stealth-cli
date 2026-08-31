@@ -66,7 +66,6 @@ screen_height = 900
 | :--- | :--- | :--- |
 | `STEALTH_HOME` | `~/.stealth` | stealth-cli 根配置与存储目录 |
 | `STEALTH_ENGINE` | 读 config.toml | 动态覆盖当前激活引擎（`prism` \| `cloak`） |
-| `PROFILE` | - | Launcher 默认绑定的目标 Profile 名称 |
 | `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `/usr/local/bin/stealth-launcher` 供 agent-browser 挂载 |
 | `AGENT_BROWSER_BIN` | `~/.bun/bin/agent-browser` | E2E 测试探测的 agent-browser 可执行路径，缺失则跳过 E2E 用例 |
 
@@ -179,7 +178,7 @@ export AGENT_BROWSER_EXECUTABLE_PATH="/usr/local/bin/stealth-launcher"
 在日常执行或 Agent 调度时：
 ```bash
 # 挂载指定环境运行
-PROFILE="worker-1" agent-browser open https://example.com
+agent-browser --session worker-1 open https://example.com
 ```
 
 ### 2. 与 Playwright 集成

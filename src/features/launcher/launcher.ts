@@ -14,18 +14,22 @@ export async function launchProfile(
   store: ProfileStorePort,
   defaults?: StealthDefaultsConfig,
 ): Promise<LaunchResult> {
-  const profileName = name || 'ephemeral'
-  let profile = name ? await store.get(name, engine.name) : null
+  const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
+  const sessionName = incomingUserData
+    ? incomingUserData.split('/').filter(Boolean).pop()
+    : undefined
+  const targetName = name || sessionName
+
+  let profile = targetName ? await store.get(targetName, engine.name) : null
 
   if (name && !profile) {
     throw new Error(`Profile '${name}' not found for engine '${engine.name}'`)
   }
 
+  const profileName = profile?.name || targetName || 'ephemeral'
   if (!profile) {
     profile = createProfileEntity(profileName, defaults)
   }
-
-  const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
 
   const userDataDir =
     incomingUserData ||
