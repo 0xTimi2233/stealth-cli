@@ -12,8 +12,6 @@ import { ProfileManager } from '@/features/profile/profile-manager'
 import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
 
-export { VERSION }
-
 export function getHelpText(): string {
   return `stealth-cli - 通用隐形浏览器调度套件与自动化代理层
 

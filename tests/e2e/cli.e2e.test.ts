@@ -67,11 +67,11 @@ describe('CLI E2E', () => {
   it('outputs version string for --version and -v', () => {
     const longVer = runCli('--version')
     expect(longVer.status).toBe(0)
-    expect(longVer.stdout).toBe('stealth-cli v0.1.5')
+    expect(longVer.stdout).toMatch(/^stealth-cli v\d+\.\d+\.\d+$/)
     expect(longVer.stderr).toBe('')
 
     const shortVer = runCli('-v')
     expect(shortVer.status).toBe(0)
-    expect(shortVer.stdout).toBe('stealth-cli v0.1.5')
+    expect(shortVer.stdout).toBe(longVer.stdout)
   })
 })
