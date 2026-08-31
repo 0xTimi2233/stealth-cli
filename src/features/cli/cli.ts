@@ -37,7 +37,6 @@ export function getHelpText(): string {
 
 环境变量:
   STEALTH_ENGINE                动态覆盖当前激活引擎 (prism | cloak)
-  PROFILE                       Launcher 默认绑定的目标 Profile 名称
   STEALTH_HOME                  根配置与存储目录 (默认: ~/.stealth)`
 }
 
@@ -184,14 +183,9 @@ export async function handleCliCommand(
     }
 
     case 'launch': {
-      let targetProfile = process.env.PROFILE
       const profileOpt = parseOption(remainingArgs, '--profile')
-      if (profileOpt) {
-        targetProfile = profileOpt
-      }
-
       const extraArgs = filterOutFlag(remainingArgs, '--profile')
-      const result = await launchProfile(targetProfile, extraArgs, engine, store, config.defaults)
+      const result = await launchProfile(profileOpt, extraArgs, engine, store, config.defaults)
 
       result.process.on('error', (err) => {
         console.error(`Error launching kernel: ${err.message}`)
