@@ -51,4 +51,27 @@ describe('CLI E2E', () => {
     const deleted = JSON.parse(delRes.stdout)
     expect(deleted.success).toBe(true)
   })
+
+  it('outputs help text without launching browser or hanging for --help and -h', () => {
+    const longHelp = runCli('--help')
+    expect(longHelp.status).toBe(0)
+    expect(longHelp.stdout).toContain('stealth-cli - 通用隐形浏览器调度套件与自动化代理层')
+    expect(longHelp.stdout).toContain('可用命令:')
+    expect(longHelp.stderr).toBe('')
+
+    const shortHelp = runCli('-h')
+    expect(shortHelp.status).toBe(0)
+    expect(shortHelp.stdout).toBe(longHelp.stdout)
+  })
+
+  it('outputs version string for --version and -v', () => {
+    const longVer = runCli('--version')
+    expect(longVer.status).toBe(0)
+    expect(longVer.stdout).toBe('stealth-cli v0.1.5')
+    expect(longVer.stderr).toBe('')
+
+    const shortVer = runCli('-v')
+    expect(shortVer.status).toBe(0)
+    expect(shortVer.stdout).toBe('stealth-cli v0.1.5')
+  })
 })
