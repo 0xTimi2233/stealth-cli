@@ -92,7 +92,10 @@ describe('Feature: Launcher', () => {
     expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('google-main')
     expect((capturedRequest as LaunchRequest | null)?.profile.timezone).toBe('America/New_York')
     expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
-      '/tmp/agent-browser/sessions/google-main',
+      '/vault/cloak/profiles/google-main/user-data',
+    )
+    expect((capturedRequest as LaunchRequest | null)?.incomingArgs).not.toContain(
+      '--user-data-dir=/tmp/agent-browser/sessions/google-main',
     )
   })
 

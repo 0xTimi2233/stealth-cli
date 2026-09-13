@@ -26,22 +26,25 @@ export async function launchProfile(
     throw new Error(`Profile '${name}' not found for engine '${engine.name}'`)
   }
 
+  const isManagedProfile = Boolean(profile && targetName)
   const profileName = profile?.name || targetName || 'ephemeral'
   if (!profile) {
     profile = createProfileEntity(profileName, defaults)
   }
 
-  const userDataDir =
-    incomingUserData ||
-    (name
-      ? store.resolveUserDataDir(profileName, engine.name)
-      : join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`))
+  const userDataDir = isManagedProfile
+    ? store.resolveUserDataDir(profileName, engine.name)
+    : incomingUserData || join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`)
+
+  const sanitizedIncomingArgs = isManagedProfile
+    ? incomingArgs.filter((arg) => !arg.startsWith('--user-data-dir='))
+    : incomingArgs
 
   const request: LaunchRequest = {
     profile,
     engine: engine.name,
     userDataDir,
-    incomingArgs,
+    incomingArgs: sanitizedIncomingArgs,
   }
 
   return engine.launch(request)
