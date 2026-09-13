@@ -14,11 +14,8 @@ export async function launchProfile(
   store: ProfileStorePort,
   defaults?: StealthDefaultsConfig,
 ): Promise<LaunchResult> {
-  const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
-  const sessionName = incomingUserData
-    ? incomingUserData.split('/').filter(Boolean).pop()
-    : undefined
-  const targetName = name || sessionName
+  const sessionFromEnv = process.env.AGENT_BROWSER_SESSION
+  const targetName = name || sessionFromEnv
 
   let profile = targetName ? await store.get(targetName, engine.name) : null
 
@@ -26,14 +23,17 @@ export async function launchProfile(
     throw new Error(`Profile '${name}' not found for engine '${engine.name}'`)
   }
 
-  const isManagedProfile = Boolean(profile && targetName)
-  const profileName = profile?.name || targetName || 'ephemeral'
+  const isManagedProfile = Boolean(profile)
+  const profileName = profile?.name || 'ephemeral'
+
   if (!profile) {
     profile = createProfileEntity(profileName, defaults)
   }
 
+  const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
+
   const userDataDir = isManagedProfile
-    ? store.resolveUserDataDir(profileName, engine.name)
+    ? store.resolveUserDataDir(profile.name, engine.name)
     : incomingUserData || join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`)
 
   const sanitizedIncomingArgs = isManagedProfile
