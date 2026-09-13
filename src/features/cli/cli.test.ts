@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { join } from 'node:path'
 import { CloakAdapter } from '@/adapter/cloak/cloak.adapter'
 import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
 import { PrismAdapter } from '@/adapter/prism/prism.adapter'
@@ -50,14 +51,14 @@ describe('Feature: CLI Handler', () => {
     expect(JSON.parse(installOut).success).toBe(true)
 
     const shimInstallOut = await handleCliCommand(
-      ['shim', '--install', '--dir', `${TEST_VAULT}/bin`],
+      ['shim', '--install', '--dir', join(TEST_VAULT, 'bin')],
       config,
       store,
       engines,
     )
     const shimInstallJson = JSON.parse(shimInstallOut)
     expect(shimInstallJson.success).toBe(true)
-    expect(shimInstallJson.shimPath).toBe(`${TEST_VAULT}/bin/agent-browser`)
+    expect(shimInstallJson.shimPath).toBe(join(TEST_VAULT, 'bin', 'agent-browser'))
   })
 
   it('handles help and version flags without launching browser', async () => {
