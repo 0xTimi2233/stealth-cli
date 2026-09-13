@@ -10,7 +10,11 @@
 
 ### 2. 会话挂载启动
 
-通过 `agent_browser` 工具传入目标环境名称（`args: ["--session", "<name>", "open", "<url>"]`）挂载持久环境，底层自动装载该环境的持久化数据与专属硬件指纹
+携带目标环境名称启动浏览器并导航：
+
+```bash
+agent_browser --session <name> open <url>
+```
 
 ### 3. 生命周期纪律
 
