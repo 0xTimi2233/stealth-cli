@@ -6,7 +6,7 @@ import type { ProfileStorePort } from '@/port/store.port'
 import { launchProfile } from './launcher'
 
 describe('Feature: Launcher', () => {
-  it('throws error if specified profile does not exist', async () => {
+  it('throws error if specified profileName does not exist', async () => {
     const mockStore: ProfileStorePort = {
       resolveUserDataDir: () => '',
       get: async () => null,
@@ -22,12 +22,12 @@ describe('Feature: Launcher', () => {
       launch: async () => ({}) as never,
     }
 
-    expect(launchProfile('non-existent', [], mockEngine, mockStore)).rejects.toThrow(
+    expect(launchProfile('non-existent', undefined, [], mockEngine, mockStore)).rejects.toThrow(
       "Profile 'non-existent' not found for engine 'prism'",
     )
   })
 
-  it('launches existing profile with correct parameters and resolved user-data-dir', async () => {
+  it('unconditionally adopts upstream incoming --user-data-dir without overriding it', async () => {
     const testProfile = createProfileEntity('test-account')
 
     const mockStore: ProfileStorePort = {
@@ -56,28 +56,31 @@ describe('Feature: Launcher', () => {
       },
     }
 
+    const upstreamDir = '/upstream/specified/dir'
     const result = await launchProfile(
+      undefined,
       'test-account',
-      ['--remote-debugging-pipe'],
+      [`--user-data-dir=${upstreamDir}`, '--remote-debugging-pipe'],
       mockEngine,
       mockStore,
     )
 
     expect(result.pid).toBe(1234)
     expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('test-account')
-    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
-      '/vault/prism/profiles/test-account/user-data',
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(upstreamDir)
+    expect((capturedRequest as LaunchRequest | null)?.incomingArgs).not.toContain(
+      `--user-data-dir=${upstreamDir}`,
     )
-    expect(result.effectiveArgs).toContain('--remote-debugging-pipe')
+    expect((capturedRequest as LaunchRequest | null)?.incomingArgs).toContain(
+      '--remote-debugging-pipe',
+    )
   })
 
-  it('automatically resolves and binds existing profile from AGENT_BROWSER_SESSION env', async () => {
-    const googleProfile = createProfileEntity('google-main', { timezone: 'America/New_York' })
-
+  it('correctly slices incoming --user-data-dir even if path contains equals signs (D5)', async () => {
     const mockStore: ProfileStorePort = {
-      resolveUserDataDir: (name, engine) => `/vault/${engine}/profiles/${name}/user-data`,
-      get: async (name) => (name === 'google-main' ? googleProfile : null),
-      list: async () => [googleProfile],
+      resolveUserDataDir: () => '',
+      get: async () => null,
+      list: async () => [],
       save: async () => {},
       delete: async () => true,
     }
@@ -100,33 +103,58 @@ describe('Feature: Launcher', () => {
       },
     }
 
-    const originalEnv = process.env.AGENT_BROWSER_SESSION
-    process.env.AGENT_BROWSER_SESSION = 'google-main'
+    const pathWithEquals = '/tmp/dir=with=equals/profile'
+    await launchProfile(
+      undefined,
+      undefined,
+      [`--user-data-dir=${pathWithEquals}`],
+      mockEngine,
+      mockStore,
+    )
 
-    try {
-      await launchProfile(
-        undefined,
-        ['--user-data-dir=/tmp/agent-browser-chrome-random-uuid'],
-        mockEngine,
-        mockStore,
-      )
-
-      expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('google-main')
-      expect((capturedRequest as LaunchRequest | null)?.profile.timezone).toBe('America/New_York')
-      expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
-        '/vault/cloak/profiles/google-main/user-data',
-      )
-      expect((capturedRequest as LaunchRequest | null)?.incomingArgs).not.toContain(
-        '--user-data-dir=/tmp/agent-browser-chrome-random-uuid',
-      )
-    } finally {
-      process.env.AGENT_BROWSER_SESSION = originalEnv
-    }
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(pathWithEquals)
   })
 
-  it('falls back gracefully to ephemeral profile for unmanaged session', async () => {
+  it('falls back to vault userDataDir when incoming --user-data-dir is absent and profile matches', async () => {
+    const testProfile = createProfileEntity('managed-account')
+
     const mockStore: ProfileStorePort = {
       resolveUserDataDir: (name, engine) => `/vault/${engine}/profiles/${name}/user-data`,
+      get: async (name) => (name === 'managed-account' ? testProfile : null),
+      list: async () => [testProfile],
+      save: async () => {},
+      delete: async () => true,
+    }
+
+    let capturedRequest: LaunchRequest | null = null
+
+    const mockEngine: EnginePort = {
+      name: 'prism',
+      getKernelPath: async () => '/bin/fake-kernel',
+      buildArgs: async (req) => req.incomingArgs,
+      launch: async (req) => {
+        capturedRequest = req
+        return {
+          engine: 'prism',
+          process: {} as never,
+          pid: 1111,
+          userDataDir: req.userDataDir,
+          effectiveArgs: req.incomingArgs,
+        }
+      },
+    }
+
+    await launchProfile('managed-account', undefined, [], mockEngine, mockStore)
+
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
+      '/vault/prism/profiles/managed-account/user-data',
+    )
+    expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('managed-account')
+  })
+
+  it('falls back to ephemeral temporary directory when incoming --user-data-dir is absent and profile does not match', async () => {
+    const mockStore: ProfileStorePort = {
+      resolveUserDataDir: () => '',
       get: async () => null,
       list: async () => [],
       save: async () => {},
@@ -144,23 +172,16 @@ describe('Feature: Launcher', () => {
         return {
           engine: 'cloak',
           process: {} as never,
-          pid: 9999,
+          pid: 2222,
           userDataDir: req.userDataDir,
           effectiveArgs: req.incomingArgs,
         }
       },
     }
 
-    await launchProfile(
-      undefined,
-      ['--user-data-dir=/tmp/agent-browser/sessions/temp-worker-99'],
-      mockEngine,
-      mockStore,
-    )
+    await launchProfile(undefined, 'unmanaged-session', [], mockEngine, mockStore)
 
     expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('ephemeral')
-    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
-      '/tmp/agent-browser/sessions/temp-worker-99',
-    )
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toContain('stealth-ephemeral-')
   })
 })

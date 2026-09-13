@@ -1,30 +1,31 @@
 import { describe, expect, it } from 'bun:test'
-import { lstat, mkdir, readlink, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { resolveEngineExecutable } from './kernel-resolver'
 
-const TEST_DIR = resolve(
-  tmpdir(),
-  'stealth-kernel-resolver-test',
-  Math.random().toString(36).slice(2),
-)
-
 describe('Adapter: Unified Kernel Resolver', () => {
-  it('creates unified symlink and resolves executable for app bundles and binary files', async () => {
-    const fakeApp = join(TEST_DIR, 'downloads/Chromium.app')
-    await mkdir(fakeApp, { recursive: true })
+  it('resolves app bundles directly to Contents/MacOS/Chromium without creating symlinks', () => {
+    const fakeApp = '/Applications/Prism Browser.app'
+    const execPath = resolveEngineExecutable(fakeApp)
 
-    const execPath = await resolveEngineExecutable('cloak', fakeApp, TEST_DIR)
+    expect(execPath).toBe(join(fakeApp, 'Contents', 'MacOS', 'Chromium'))
+  })
 
-    const linkPath = join(TEST_DIR, 'engines/cloak/Chromium.app')
-    const linkStat = await lstat(linkPath)
-    expect(linkStat.isSymbolicLink()).toBe(true)
+  it('expands tilde paths correctly', () => {
+    const tildePath = '~/.cache/cloakbrowser/chromium/Chromium.app'
+    const execPath = resolveEngineExecutable(tildePath)
 
-    const target = await readlink(linkPath)
-    expect(resolve(target)).toBe(resolve(fakeApp))
-    expect(execPath).toContain(join('Contents', 'MacOS', 'Chromium'))
+    const expected = join(
+      homedir(),
+      '.cache/cloakbrowser/chromium/Chromium.app/Contents/MacOS/Chromium',
+    )
+    expect(execPath).toBe(expected)
+  })
 
-    await rm(TEST_DIR, { recursive: true, force: true }).catch(() => {})
+  it('returns non-app binary paths directly', () => {
+    const binaryPath = '/usr/bin/chromium'
+    const execPath = resolveEngineExecutable(binaryPath)
+
+    expect(execPath).toBe('/usr/bin/chromium')
   })
 })

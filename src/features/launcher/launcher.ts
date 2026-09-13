@@ -8,37 +8,39 @@ import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
 
 export async function launchProfile(
-  name: string | undefined,
+  profileName: string | undefined,
+  sessionName: string | undefined,
   incomingArgs: string[],
   engine: EnginePort,
   store: ProfileStorePort,
   defaults?: StealthDefaultsConfig,
 ): Promise<LaunchResult> {
-  const sessionFromEnv = process.env.AGENT_BROWSER_SESSION
-  const targetName = name || sessionFromEnv
+  const targetName = profileName || sessionName
 
   let profile = targetName ? await store.get(targetName, engine.name) : null
 
-  if (name && !profile) {
-    throw new Error(`Profile '${name}' not found for engine '${engine.name}'`)
+  if (profileName && !profile) {
+    throw new Error(`Profile '${profileName}' not found for engine '${engine.name}'`)
   }
 
   const isManagedProfile = Boolean(profile)
-  const profileName = profile?.name || 'ephemeral'
+  const resolvedName = profile?.name || 'ephemeral'
 
   if (!profile) {
-    profile = createProfileEntity(profileName, defaults)
+    profile = createProfileEntity(resolvedName, defaults)
   }
 
-  const incomingUserData = incomingArgs.find((a) => a.startsWith('--user-data-dir='))?.split('=')[1]
+  const prefix = '--user-data-dir='
+  const matched = incomingArgs.find((a) => a.startsWith(prefix))
+  const incomingUserData = matched ? matched.slice(prefix.length) : undefined
 
-  const userDataDir = isManagedProfile
-    ? store.resolveUserDataDir(profile.name, engine.name)
-    : incomingUserData || join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`)
+  const userDataDir =
+    incomingUserData ||
+    (isManagedProfile
+      ? store.resolveUserDataDir(profile.name, engine.name)
+      : join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`))
 
-  const sanitizedIncomingArgs = isManagedProfile
-    ? incomingArgs.filter((arg) => !arg.startsWith('--user-data-dir='))
-    : incomingArgs
+  const sanitizedIncomingArgs = incomingArgs.filter((arg) => !arg.startsWith(prefix))
 
   const request: LaunchRequest = {
     profile,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const AGENT_BROWSER_BIN = process.env.AGENT_BROWSER_BIN || join(homedir(), '.bun/bin/agent-browser')
@@ -78,6 +78,75 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
       try {
         execAgentBrowser(session, ['close'])
       } catch {}
+    }
+  })
+
+  it('binds persistent profile to vault user-data-dir and passes DevToolsActivePort handshake without timeout', () => {
+    const testDir = join(tmpdir(), `stealth-e2e-${Date.now()}`)
+    const shimDir = join(testDir, 'bin')
+    const configPath = join(testDir, 'config.toml')
+    const session = `e2e-persist-${Date.now()}`
+
+    try {
+      mkdirSync(testDir, { recursive: true })
+      copyFileSync(join(homedir(), '.stealth/config.toml'), configPath)
+
+      const createProc = spawnSync('bun', [STEALTH_LAUNCHER_PATH, 'create', session], {
+        encoding: 'utf8',
+        env: { ...process.env, STEALTH_HOME: testDir, STEALTH_ENGINE: 'prism' },
+      })
+      expect(createProc.status).toBe(0)
+
+      const installProc = spawnSync(
+        'bun',
+        [STEALTH_LAUNCHER_PATH, 'shim', '--install', '--dir', shimDir],
+        {
+          encoding: 'utf8',
+          env: { ...process.env, STEALTH_HOME: testDir },
+        },
+      )
+      expect(installProc.status).toBe(0)
+
+      // 在 shimDir 中提供指向当前源码 CLI 的 stealth-cli 脚本，确保 shim 脚本调用时命中当前最新代码
+      const stealthCliShim = join(shimDir, 'stealth-cli')
+      writeFileSync(stealthCliShim, `#!/bin/sh\nexec bun "${STEALTH_LAUNCHER_PATH}" "$@"\n`, {
+        mode: 0o755,
+      })
+
+      const shimBin = join(shimDir, 'agent-browser')
+      const openProc = spawnSync(shimBin, ['--session', session, 'open', 'https://example.com'], {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          PATH: `${shimDir}:${process.env.PATH}`,
+          STEALTH_HOME: testDir,
+          STEALTH_ENGINE: 'prism',
+          AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+        },
+      })
+      expect(openProc.status).toBe(0)
+      expect(openProc.stdout).toContain('Example Domain')
+
+      const portFile = join(
+        testDir,
+        'vault/prism/profiles',
+        session,
+        'user-data/DevToolsActivePort',
+      )
+      expect(existsSync(portFile)).toBe(true)
+
+      spawnSync(shimBin, ['--session', session, 'close'], {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          PATH: `${shimDir}:${process.env.PATH}`,
+          STEALTH_HOME: testDir,
+          STEALTH_ENGINE: 'prism',
+          AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+        },
+      })
+    } finally {
+      rmSync(testDir, { recursive: true, force: true })
     }
   })
 })

@@ -9,6 +9,8 @@ import { createProfileEntity } from '@/domain/profile'
 import { VERSION } from '@/domain/version'
 import { launchProfile } from '@/features/launcher/launcher'
 import { ProfileManager } from '@/features/profile/profile-manager'
+import { installShim } from '@/features/shim/shim-installer'
+import { executeShim } from '@/features/shim/shim-runner'
 import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
 
@@ -24,7 +26,8 @@ export function getHelpText(): string {
   create <name> [选项]          创建独立环境配置及其物理隔离数据目录
   delete <name>                 删除指定的环境配置及其对应的数据目录
   launch-args [选项]            获取当前选定引擎官方算法生成的指纹注入启动参数
-  install [engine]              校验内核并自愈建立指定引擎的规范软链 (prism | cloak)
+  install [engine]              校验内核就绪状态 (prism | cloak)
+  shim [选项] [...参数]         调度上游 agent-browser 并自动绑定环境会话
   launch [选项] [...参数]       启动指定环境或临时环境的隐形浏览器 (默认命令)
 
 常用选项:
@@ -104,7 +107,15 @@ export async function handleCliCommand(
     return `stealth-cli v${VERSION}`
   }
 
-  const KNOWN_COMMANDS = new Set(['list', 'create', 'delete', 'launch-args', 'launch', 'install'])
+  const KNOWN_COMMANDS = new Set([
+    'list',
+    'create',
+    'delete',
+    'launch-args',
+    'launch',
+    'install',
+    'shim',
+  ])
   const command = argv[0] && KNOWN_COMMANDS.has(argv[0]) ? argv[0] : 'launch'
   const remainingArgs = KNOWN_COMMANDS.has(argv[0] ?? '') ? argv.slice(1) : argv
 
@@ -182,10 +193,35 @@ export async function handleCliCommand(
       return JSON.stringify(args)
     }
 
+    case 'shim': {
+      if (remainingArgs.includes('--install')) {
+        const targetDir = parseOption(remainingArgs, '--dir')
+        const result = installShim({ dir: targetDir })
+        return JSON.stringify(result)
+      }
+
+      const upstream = parseOption(remainingArgs, '--upstream')
+      const effectiveArgs = filterOutFlag(filterOutFlag(remainingArgs, '--upstream'), '--dir')
+      await executeShim(effectiveArgs, store, activeEngineType, {
+        upstreamBinary: upstream,
+        envSession: process.env.AGENT_BROWSER_SESSION,
+        currentShimPath: process.env.STEALTH_SHIM_PATH,
+      })
+      return ''
+    }
+
     case 'launch': {
       const profileOpt = parseOption(remainingArgs, '--profile')
+      const sessionName = process.env.AGENT_BROWSER_SESSION
       const extraArgs = filterOutFlag(remainingArgs, '--profile')
-      const result = await launchProfile(profileOpt, extraArgs, engine, store, config.defaults)
+      const result = await launchProfile(
+        profileOpt,
+        sessionName,
+        extraArgs,
+        engine,
+        store,
+        config.defaults,
+      )
 
       result.process.on('error', (err) => {
         console.error(`Error launching kernel: ${err.message}`)

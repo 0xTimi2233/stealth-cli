@@ -51,14 +51,13 @@ screen_width = 1440
 screen_height = 900
 ```
 
-## 物理存储与软链自愈规范
+## 物理存储规范
 
-1. **按 Adapter 隔离存储**：
-   - Prism 数据：`~/.stealth/vault/prism/profiles/<name>/user-data`
-   - Cloak 数据：`~/.stealth/vault/cloak/profiles/<name>/user-data`
-   隔离不同 Chromium 内核版本的用户数据目录，避免数据格式冲突。
-2. **统一软链自愈**：
-   系统启动或执行 `stealth-cli install [engine]` 时，自动根据配置的 `binary_path` 在 `~/.stealth/engines/<engine>/` 下建立并校验规范软链。
+按 Adapter 隔离存储数据：
+- Prism 数据：`~/.stealth/vault/prism/profiles/<name>/user-data`
+- Cloak 数据：`~/.stealth/vault/cloak/profiles/<name>/user-data`
+
+隔离不同 Chromium 内核版本的用户数据目录，避免数据格式冲突。
 
 ## 环境变量
 
@@ -151,7 +150,7 @@ stealth-cli launch-args [--profile <name>]
 
 ### 5. 自动预装/就绪内核
 
-校验内核并自愈建立指定引擎的规范软链；`cloak` 在内核缺失时自动下载官方内核，`prism` 依赖宿主 App 已就绪的内核路径：
+校验内核就绪状态；`cloak` 在内核缺失时自动下载官方内核，`prism` 依赖宿主 App 已就绪的内核路径：
 
 ```bash
 stealth-cli install [engine]
@@ -162,7 +161,24 @@ stealth-cli install [engine]
 {
   "success": true,
   "engine": "cloak",
-  "kernelPath": "/Users/.../.stealth/engines/cloak/Chromium.app/Contents/MacOS/Chromium"
+  "kernelPath": "/Applications/Prism Browser.app/.../Chromium"
+}
+```
+
+### 6. 安装上游调度垫片
+
+将透明垫片部署至 PATH 目录，自动完成会话绑定与数据目录挂载：
+
+```bash
+stealth-cli shim --install [--dir <path>]
+```
+
+输出格式：
+```json
+{
+  "success": true,
+  "shimPath": "/Users/.../.local/bin/agent-browser",
+  "upstream": "/Users/.../.bun/bin/agent-browser"
 }
 ```
 
@@ -170,14 +186,17 @@ stealth-cli install [engine]
 
 ### 1. 与 agent-browser 集成（推荐）
 
-在 `~/.zprofile` 中配置：
+初始化部署调度垫片并在环境配置文件中导出内核路径：
 ```bash
+# 部署上游调度垫片
+stealth-cli shim --install
+
+# 导出内核启动器环境变量
 export AGENT_BROWSER_EXECUTABLE_PATH="/usr/local/bin/stealth-launcher"
 ```
 
-在日常执行或 Agent 调度时：
+日常执行或 Agent 调度时直接使用会话名称挂载环境：
 ```bash
-# 挂载指定环境运行
 agent-browser --session worker-1 open https://example.com
 ```
 
