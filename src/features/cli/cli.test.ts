@@ -48,6 +48,16 @@ describe('Feature: CLI Handler', () => {
 
     const installOut = await handleCliCommand(['install', 'prism'], config, store, engines)
     expect(JSON.parse(installOut).success).toBe(true)
+
+    const shimInstallOut = await handleCliCommand(
+      ['shim', '--install', '--dir', `${TEST_VAULT}/bin`],
+      config,
+      store,
+      engines,
+    )
+    const shimInstallJson = JSON.parse(shimInstallOut)
+    expect(shimInstallJson.success).toBe(true)
+    expect(shimInstallJson.shimPath).toBe(`${TEST_VAULT}/bin/agent-browser`)
   })
 
   it('handles help and version flags without launching browser', async () => {

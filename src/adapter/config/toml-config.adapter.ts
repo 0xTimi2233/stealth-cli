@@ -21,7 +21,7 @@ export class TomlConfigAdapter implements ConfigPort {
       const content = await readFile(targetPath, 'utf8')
       parsed = Bun.TOML.parse(content) as Record<string, unknown>
     } catch {
-      // Missing or unreadable config falls back directly to default SSOT specification
+      // 配置文件缺失或不可读时直接回退至默认 SSOT 规范
     }
 
     const engineRaw = typeof parsed.engine === 'string' ? parsed.engine : 'prism'
