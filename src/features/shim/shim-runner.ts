@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { accessSync, constants, existsSync, readFileSync, realpathSync } from 'node:fs'
-import { join } from 'node:path'
+import { delimiter, isAbsolute, join } from 'node:path'
 import type { EngineType } from '@/domain/launch'
 import type { ProfileStorePort } from '@/port/store.port'
 
@@ -44,7 +44,7 @@ export async function rewriteShimArgs(
   const explicitProfile = parseShimOption(argv, '--profile')
 
   if (explicitProfile) {
-    if (explicitProfile.startsWith('/')) {
+    if (isAbsolute(explicitProfile)) {
       return argv
     }
     const profile = await store.get(explicitProfile, engine)
@@ -81,7 +81,7 @@ export function resolveUpstreamBinary(
   }
 
   const currentRealShim = currentShimPath ? safeRealpath(currentShimPath) : null
-  const pathDirs = (process.env.PATH || '').split(':').filter(Boolean)
+  const pathDirs = (process.env.PATH || '').split(delimiter).filter(Boolean)
 
   for (const dir of pathDirs) {
     const candidate = join(dir, 'agent-browser')

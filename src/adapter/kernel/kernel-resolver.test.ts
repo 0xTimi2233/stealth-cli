@@ -8,7 +8,7 @@ describe('Adapter: Unified Kernel Resolver', () => {
     const fakeApp = '/Applications/Prism Browser.app'
     const execPath = resolveEngineExecutable(fakeApp)
 
-    expect(execPath).toBe('/Applications/Prism Browser.app/Contents/MacOS/Chromium')
+    expect(execPath).toBe(join(fakeApp, 'Contents', 'MacOS', 'Chromium'))
   })
 
   it('expands tilde paths correctly', () => {

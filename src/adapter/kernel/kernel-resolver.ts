@@ -9,6 +9,6 @@ export function resolveEngineExecutable(binaryPathOrEngine: string, binaryPath?:
   const realBundlePath = lastAppIndex >= 0 ? expanded.slice(0, lastAppIndex + 4) : expanded
 
   return realBundlePath.endsWith('.app')
-    ? join(realBundlePath, 'Contents/MacOS/Chromium')
+    ? join(realBundlePath, 'Contents', 'MacOS', 'Chromium')
     : realBundlePath
 }
