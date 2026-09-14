@@ -27,7 +27,7 @@ describe('Feature: Launcher', () => {
     )
   })
 
-  it('unconditionally adopts upstream incoming --user-data-dir without overriding it', async () => {
+  it('prioritizes vault userDataDir over upstream incoming --user-data-dir for managed profiles', async () => {
     const testProfile = createProfileEntity('test-account')
 
     const mockStore: ProfileStorePort = {
@@ -67,12 +67,57 @@ describe('Feature: Launcher', () => {
 
     expect(result.pid).toBe(1234)
     expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('test-account')
-    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(upstreamDir)
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
+      '/vault/prism/profiles/test-account/user-data',
+    )
     expect((capturedRequest as LaunchRequest | null)?.incomingArgs).not.toContain(
       `--user-data-dir=${upstreamDir}`,
     )
     expect((capturedRequest as LaunchRequest | null)?.incomingArgs).toContain(
       '--remote-debugging-pipe',
+    )
+  })
+
+  it('respects incoming --user-data-dir for unmanaged ephemeral sessions', async () => {
+    const mockStore: ProfileStorePort = {
+      resolveUserDataDir: () => '',
+      get: async () => null,
+      list: async () => [],
+      save: async () => {},
+      delete: async () => true,
+    }
+
+    let capturedRequest: LaunchRequest | null = null
+
+    const mockEngine: EnginePort = {
+      name: 'prism',
+      getKernelPath: async () => '/bin/fake-kernel',
+      buildArgs: async (req) => req.incomingArgs,
+      launch: async (req) => {
+        capturedRequest = req
+        return {
+          engine: 'prism',
+          process: {} as never,
+          pid: 4321,
+          userDataDir: req.userDataDir,
+          effectiveArgs: req.incomingArgs,
+        }
+      },
+    }
+
+    const customEphemeralDir = '/tmp/custom-ephemeral-dir'
+    await launchProfile(
+      undefined,
+      'unmanaged-session',
+      [`--user-data-dir=${customEphemeralDir}`, '--remote-debugging-pipe'],
+      mockEngine,
+      mockStore,
+    )
+
+    expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('ephemeral')
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(customEphemeralDir)
+    expect((capturedRequest as LaunchRequest | null)?.incomingArgs).not.toContain(
+      `--user-data-dir=${customEphemeralDir}`,
     )
   })
 

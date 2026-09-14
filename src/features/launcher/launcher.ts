@@ -34,11 +34,9 @@ export async function launchProfile(
   const matched = incomingArgs.find((a) => a.startsWith(prefix))
   const incomingUserData = matched ? matched.slice(prefix.length) : undefined
 
-  const userDataDir =
-    incomingUserData ||
-    (isManagedProfile
-      ? store.resolveUserDataDir(profile.name, engine.name)
-      : join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`))
+  const userDataDir = isManagedProfile
+    ? store.resolveUserDataDir(profile.name, engine.name)
+    : incomingUserData || join(tmpdir(), `stealth-ephemeral-${Date.now()}-${randomInt(1000, 9999)}`)
 
   const sanitizedIncomingArgs = incomingArgs.filter((arg) => !arg.startsWith(prefix))
 
