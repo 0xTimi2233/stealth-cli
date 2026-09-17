@@ -25,10 +25,8 @@ export function getHelpText(): string {
   list                          列出所有已保存的环境配置
   create <name> [选项]          创建独立环境配置及其物理隔离数据目录
   delete <name>                 删除指定的环境配置及其对应的数据目录
-  launch-args [选项]            获取当前选定引擎官方算法生成的指纹注入启动参数
   install [engine]              校验内核就绪状态 (prism | cloak)
   shim [选项] [...参数]         调度上游 agent-browser 并自动绑定环境会话
-  launch [选项] [...参数]       启动指定环境或临时环境的隐形浏览器 (默认命令)
 
 常用选项:
   -h, --help                    显示帮助说明

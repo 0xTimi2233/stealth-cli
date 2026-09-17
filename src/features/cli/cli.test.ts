@@ -73,6 +73,13 @@ describe('Feature: CLI Handler', () => {
     const helpOutLong = await handleCliCommand(['--help'], config, store, engines)
     expect(helpOutLong).toContain('stealth-cli - 通用隐形浏览器调度套件与自动化代理层')
     expect(helpOutLong).toContain('可用命令:')
+    expect(helpOutLong).toContain('list')
+    expect(helpOutLong).toContain('create')
+    expect(helpOutLong).toContain('delete')
+    expect(helpOutLong).toContain('install')
+    expect(helpOutLong).toContain('shim')
+    expect(helpOutLong).not.toContain('launch-args')
+    expect(helpOutLong).not.toMatch(/\blaunch\b.*启动指定环境/)
 
     const helpOutShort = await handleCliCommand(['-h'], config, store, engines)
     expect(helpOutShort).toBe(helpOutLong)

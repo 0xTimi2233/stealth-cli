@@ -57,6 +57,8 @@ describe('CLI E2E', () => {
     expect(longHelp.status).toBe(0)
     expect(longHelp.stdout).toContain('stealth-cli - 通用隐形浏览器调度套件与自动化代理层')
     expect(longHelp.stdout).toContain('可用命令:')
+    expect(longHelp.stdout).not.toContain('launch-args')
+    expect(longHelp.stdout).not.toMatch(/\blaunch\b.*启动指定环境/)
     expect(longHelp.stderr).toBe('')
 
     const shortHelp = runCli('-h')
