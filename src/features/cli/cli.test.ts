@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'bun:test'
+import { afterAll, describe, expect, it } from 'bun:test'
+import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { CloakAdapter } from '@/adapter/cloak/cloak.adapter'
 import { TomlConfigAdapter } from '@/adapter/config/toml-config.adapter'
@@ -9,6 +10,11 @@ import { handleCliCommand } from '@/features/cli/cli'
 const TEST_VAULT = `/tmp/stealth-cli-test-${Math.random().toString(36).slice(2)}`
 
 describe('Feature: CLI Handler', () => {
+  afterAll(() => {
+    try {
+      rmSync(TEST_VAULT, { recursive: true, force: true })
+    } catch {}
+  })
   it('handles list, create, launch-args and delete commands returning clean JSON strings', async () => {
     const store = new FileStoreAdapter(TEST_VAULT)
     const configAdapter = new TomlConfigAdapter('/tmp/non-existent.toml')
@@ -71,7 +77,7 @@ describe('Feature: CLI Handler', () => {
     }
 
     const helpOutLong = await handleCliCommand(['--help'], config, store, engines)
-    expect(helpOutLong).toContain('stealth-cli - 通用隐形浏览器调度套件与自动化代理层')
+    expect(helpOutLong).toContain('stealth-cli - 通用隐形浏览器环境管理套件与自动化代理层')
     expect(helpOutLong).toContain('可用命令:')
     expect(helpOutLong).toContain('list')
     expect(helpOutLong).toContain('create')
@@ -121,5 +127,6 @@ describe('Feature: CLI Handler', () => {
       engines,
     )
     expect(res).toBe('')
+    await Bun.sleep(100)
   })
 })

@@ -5,7 +5,7 @@ import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const AGENT_BROWSER_BIN = process.env.AGENT_BROWSER_BIN || join(homedir(), '.bun/bin/agent-browser')
-const STEALTH_LAUNCHER_PATH = join(import.meta.dir, '../../src/features/cli/cli.ts')
+const STEALTH_CLI_PATH = join(import.meta.dir, '../../src/features/cli/cli.ts')
 const hasAgentBrowser = existsSync(AGENT_BROWSER_BIN)
 
 function execAgentBrowser(
@@ -17,7 +17,7 @@ function execAgentBrowser(
     encoding: 'utf8',
     env: {
       ...process.env,
-      AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+      AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_CLI_PATH,
       ...env,
     },
   })
@@ -91,7 +91,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
       mkdirSync(testDir, { recursive: true })
       copyFileSync(join(homedir(), '.stealth/config.toml'), configPath)
 
-      const createProc = spawnSync('bun', [STEALTH_LAUNCHER_PATH, 'create', session], {
+      const createProc = spawnSync('bun', [STEALTH_CLI_PATH, 'create', session], {
         encoding: 'utf8',
         env: { ...process.env, STEALTH_HOME: testDir, STEALTH_ENGINE: 'prism' },
       })
@@ -99,7 +99,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
 
       const installProc = spawnSync(
         'bun',
-        [STEALTH_LAUNCHER_PATH, 'shim', '--install', '--dir', shimDir],
+        [STEALTH_CLI_PATH, 'shim', '--install', '--dir', shimDir],
         {
           encoding: 'utf8',
           env: { ...process.env, STEALTH_HOME: testDir },
@@ -109,7 +109,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
 
       // 在 shimDir 中提供指向当前源码 CLI 的 stealth-cli 脚本，确保 shim 脚本调用时命中当前最新代码
       const stealthCliShim = join(shimDir, 'stealth-cli')
-      writeFileSync(stealthCliShim, `#!/bin/sh\nexec bun "${STEALTH_LAUNCHER_PATH}" "$@"\n`, {
+      writeFileSync(stealthCliShim, `#!/bin/sh\nexec bun "${STEALTH_CLI_PATH}" "$@"\n`, {
         mode: 0o755,
       })
 
@@ -124,7 +124,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
             PATH: `${shimDir}:${process.env.PATH}`,
             STEALTH_HOME: testDir,
             STEALTH_ENGINE: 'prism',
-            AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+            AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_CLI_PATH,
           },
         },
       )
@@ -146,7 +146,7 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
           PATH: `${shimDir}:${process.env.PATH}`,
           STEALTH_HOME: testDir,
           STEALTH_ENGINE: 'prism',
-          AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+          AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_CLI_PATH,
         },
       })
     } finally {
