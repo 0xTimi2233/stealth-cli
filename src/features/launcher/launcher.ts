@@ -23,8 +23,9 @@ export async function launchProfile(
   let targetName = profileName
 
   if (!targetName && incomingUserData) {
-    const vaultMatch = incomingUserData.match(
-      new RegExp(`(?:^|[\\/])${engine.name}[\\/]profiles[\\/]([^\\/]+)[\\/]user-data[\\/]?$`),
+    const normalizedUserData = incomingUserData.replace(/\\/g, '/')
+    const vaultMatch = normalizedUserData.match(
+      new RegExp(`(?:^|/)${engine.name}/profiles/([^/]+)/user-data/?$`),
     )
     if (vaultMatch?.[1]) {
       targetName = vaultMatch[1]

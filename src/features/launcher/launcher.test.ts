@@ -114,6 +114,50 @@ describe('Feature: Launcher', () => {
     expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(vaultDir)
   })
 
+  it('infers profile from Windows-style backslash incoming --user-data-dir', async () => {
+    const testProfile = createProfileEntity('win-account')
+
+    const mockStore: ProfileStorePort = {
+      resolveUserDataDir: (name, engine) => `C:\\vault\\${engine}\\profiles\\${name}\\user-data`,
+      get: async (name) => (name === 'win-account' ? testProfile : null),
+      list: async () => [testProfile],
+      save: async () => {},
+      delete: async () => true,
+    }
+
+    let capturedRequest: LaunchRequest | null = null
+
+    const mockEngine: EnginePort = {
+      name: 'prism',
+      getKernelPath: async () => 'C:\\bin\\fake-kernel.exe',
+      buildArgs: async (req) => req.incomingArgs,
+      launch: async (req) => {
+        capturedRequest = req
+        return {
+          engine: 'prism',
+          process: {} as never,
+          pid: 3333,
+          userDataDir: req.userDataDir,
+          effectiveArgs: req.incomingArgs,
+        }
+      },
+    }
+
+    const winVaultDir = 'C:\\vault\\prism\\profiles\\win-account\\user-data'
+    await launchProfile(
+      undefined,
+      undefined,
+      [`--user-data-dir=${winVaultDir}`, '--remote-debugging-pipe'],
+      mockEngine,
+      mockStore,
+    )
+
+    expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('win-account')
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
+      'C:\\vault\\prism\\profiles\\win-account\\user-data',
+    )
+  })
+
   it('respects incoming --user-data-dir for unmanaged ephemeral sessions even if session matches a profile', async () => {
     const testProfile = createProfileEntity('unmanaged-session')
 
