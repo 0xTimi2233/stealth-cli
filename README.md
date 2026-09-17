@@ -1,6 +1,6 @@
 # stealth-cli
 
-通用隐形浏览器调度套件与自动化代理层，采用纯编排（Pure Orchestration）架构统一管理 Prism Browser 与 CloakBrowser 双隐形内核，负责浏览器环境 Profile 生命周期管理以及自动化测试框架的内核调度
+通用隐形浏览器环境管理套件与自动化代理层，采用纯编排架构统一管理 Prism Browser 与 CloakBrowser 双隐形内核，负责浏览器环境 Profile 生命周期管理以及自动化测试框架的内核启动适配
 
 ## 上游依赖
 
@@ -10,20 +10,20 @@
 | :--- | :--- | :--- |
 | [DFarm6/Prism-Browser-Community](https://github.com/DFarm6/Prism-Browser-Community) | Prism 引擎内核宿主：Chromium + Electron 的本地优先多环境指纹浏览器，内核由宿主 App 自带管理，免费版内核为 **Chromium 144** | `config.toml` → `engines.prism.binary_path` 指向宿主 App 内 `Contents/Resources/kernels/current/Chromium.app` |
 | [CloakHQ/cloakbrowser](https://github.com/CloakHQ/cloakbrowser) | Cloak 引擎内核：源码级指纹补丁 Chromium，已作为 npm 依赖内聚，内核在首次启动时自动下载并缓存 | `config.toml` → `engines.cloak.binary_path`；路径缺失或失效时自动回落官方 `ensureBinary()` |
-| [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | 上层自动化驱动：面向 AI Agent 的浏览器 CLI，E2E 测试与日常 Agent 调度均由它拉起内核 | 环境变量 `AGENT_BROWSER_EXECUTABLE_PATH` 指向 `stealth-launcher` |
+| [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | 上层自动化驱动：面向 AI Agent 的浏览器 CLI，E2E 测试与日常自动化交互均由它拉起内核 | 环境变量 `AGENT_BROWSER_EXECUTABLE_PATH` 指向 `stealth-cli` |
 
 > 内核实际版本以 Prism 宿主的 `kernels/current/manifest.json` 与 Cloak 缓存目录为准，本项目不锁定内核版本。
-> Prism 引擎依赖 macOS `.app` 包结构解析，当前仅在 macOS (Apple Silicon) 下验证；Cloak 引擎跨平台。
+> Prism 引擎依赖 macOS .app 包结构解析，当前仅在 Apple Silicon 芯片的 macOS 下验证；Cloak 引擎跨平台。
 
 ## 核心架构
 
-项目严格遵循 **DDD + 端口与适配器（六边形架构） + 业务垂直切片**：
+项目严格遵循领域驱动设计、端口与适配器架构以及业务垂直切片规范：
 
-- `src/domain/`：领域实体与类型定义（Profile、LaunchRequest、LaunchResult），以环境名称 `name` 为唯一主键
-- `src/port/`：抽象出站端口契约（`EnginePort`、`ProfileStorePort`、`ConfigPort`）
-- `src/adapter/`：各引擎独立目录隔离，内置 ACL 防腐层与统一软链解析（`kernel-resolver.ts`），正式集成 `cloakbrowser` 官方库并内聚 Prism 参数算法
-- `src/features/`：端到端业务垂直切片（`profile/`、`launcher/`、`cli/`），切片自带单元测试
-- `tests/`：双层 TDD 外层，集成测试与基于真实 `agent-browser` 驱动的确定性无头 E2E 测试
+- `src/domain/`：领域实体与类型定义，包含 Profile、LaunchRequest 以及 LaunchResult，以环境名称 `name` 为唯一主键
+- `src/port/`：抽象出站端口契约，包含 `EnginePort`、`ProfileStorePort` 与 `ConfigPort`
+- `src/adapter/`：各引擎独立目录隔离，内置防腐层与统一软链解析，正式集成 `cloakbrowser` 官方库并内聚 Prism 参数算法
+- `src/features/`：端到端业务垂直切片，包含 `profile/`、`launcher/` 与 `cli/`，切片自带单元测试
+- `tests/`：双层 TDD 外层，包含集成测试与基于真实 `agent-browser` 驱动的确定性无头 E2E 测试
 
 ## 配置文件规范
 
@@ -32,7 +32,7 @@
 ```toml
 # ~/.stealth/config.toml
 
-# 当前激活引擎 (可选: "prism" | "cloak")
+# 当前激活引擎，可选 prism 或 cloak
 engine = "prism"
 
 [engines.prism]
@@ -64,8 +64,8 @@ screen_height = 900
 | 变量名 | 默认值 | 说明 |
 | :--- | :--- | :--- |
 | `STEALTH_HOME` | `~/.stealth` | stealth-cli 根配置与存储目录 |
-| `STEALTH_ENGINE` | 读 config.toml | 动态覆盖当前激活引擎（`prism` \| `cloak`） |
-| `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `stealth-cli` 路径（如 `~/.local/bin/stealth-cli`）供 agent-browser 挂载 |
+| `STEALTH_ENGINE` | 读 config.toml | 动态覆盖当前激活引擎，可选 `prism` 或 `cloak` |
+| `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `stealth-cli` 路径，例如 `~/.local/bin/stealth-cli`，供 agent-browser 挂载 |
 | `AGENT_BROWSER_BIN` | `~/.bun/bin/agent-browser` | E2E 测试探测的 agent-browser 可执行路径，缺失则跳过 E2E 用例 |
 
 ## CLI 指令契约
@@ -167,7 +167,7 @@ stealth-cli install [engine]
 
 ### 6. 安装上游调度垫片
 
-将透明垫片部署至 PATH 目录，自动完成会话绑定与数据目录挂载：
+将透明垫片部署至 PATH 目录，自动完成环境名称向物理数据目录的白名单解析：
 
 ```bash
 stealth-cli shim --install [--dir <path>]
@@ -184,7 +184,7 @@ stealth-cli shim --install [--dir <path>]
 
 ## 自动化框架与 agent-browser 集成
 
-### 1. 与 agent-browser 集成（推荐）
+### 1. 与 agent-browser 集成
 
 初始化部署调度垫片并在环境配置文件中导出内核路径：
 ```bash
@@ -197,10 +197,10 @@ export AGENT_BROWSER_EXECUTABLE_PATH="$HOME/.local/bin/stealth-cli"
 
 调用契约：
 ```bash
-# 持久化环境任务：携带环境名称挂载（底层自动展开为当前引擎物理路径，固定指纹与数据留存）
+# 持久化环境任务：携带环境名称挂载，底层自动展开为当前引擎物理路径，固定指纹与数据留存
 agent-browser --profile worker-1 open https://example.com
 
-# 临时无状态任务：不传 profile（底层自动分配全新随机硬件指纹种子，用完即释放）
+# 临时无状态任务：不传 profile，底层自动分配全新随机硬件指纹种子，用完即释放
 agent-browser open https://example.com
 
 # 并发任务隔离：可自由组合 --session 进行守护进程区分
@@ -224,16 +224,16 @@ const browser = await chromium.launch({
 
 Release 页面同时提供两种生产级分发产物，供不同场景按需选择：
 
-### 模式 A：轻量单文件脚本（推荐，仅 ~127 KB）
-适合本地开发机或已安装 Bun 的机器，零多余体积开销：
+### 模式 A：轻量单文件脚本
+适合本地开发机或已安装 Bun 的机器，体积仅约 127 KB，零多余体积开销：
 ```bash
 curl -L https://github.com/0xTimi2233/stealth-cli/releases/latest/download/stealth-cli.js -o /usr/local/bin/stealth-cli
 chmod +x /usr/local/bin/stealth-cli
 ln -sf /usr/local/bin/stealth-cli /usr/local/bin/stealth-launcher
 ```
 
-### 模式 B：独立单文件二进制（~50 MB）
-适合远程裸机或容器，无需目标机器安装 Node.js 或 Bun：
+### 模式 B：独立单文件二进制
+适合远程裸机或容器，无需目标机器安装 Node.js 或 Bun，体积约 50 MB：
 ```bash
 # Linux x64
 curl -L https://github.com/0xTimi2233/stealth-cli/releases/latest/download/stealth-cli-linux-x64 -o /usr/local/bin/stealth-cli

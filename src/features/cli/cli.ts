@@ -15,7 +15,7 @@ import type { EnginePort } from '@/port/engine.port'
 import type { ProfileStorePort } from '@/port/store.port'
 
 export function getHelpText(): string {
-  return `stealth-cli - 通用隐形浏览器调度套件与自动化代理层
+  return `stealth-cli - 通用隐形浏览器环境管理套件与自动化代理层
 
 用法:
   stealth-cli [命令] [选项]
@@ -25,20 +25,20 @@ export function getHelpText(): string {
   list                          列出所有已保存的环境配置
   create <name> [选项]          创建独立环境配置及其物理隔离数据目录
   delete <name>                 删除指定的环境配置及其对应的数据目录
-  install [engine]              校验内核就绪状态 (prism | cloak)
-  shim [选项] [...参数]         调度上游 agent-browser 并自动绑定环境会话
+  install [engine]              校验内核就绪状态，可选 prism 或 cloak
+  shim [选项] [...参数]         代理执行上游 agent-browser 并自动解析环境配置
 
 常用选项:
   -h, --help                    显示帮助说明
   -v, --version                 显示版本信息
   --profile <name>              指定目标环境名称
-  --timezone <tz>               指定时区 (如 Asia/Tokyo)
-  --language <lang>             指定语言 (如 en-US)
+  --timezone <tz>               指定时区，例如 Asia/Tokyo
+  --language <lang>             指定语言，例如 en-US
   --proxy <url>                 指定代理服务器地址
 
 环境变量:
-  STEALTH_ENGINE                动态覆盖当前激活引擎 (prism | cloak)
-  STEALTH_HOME                  根配置与存储目录 (默认: ~/.stealth)`
+  STEALTH_ENGINE                动态覆盖当前激活引擎，可选 prism 或 cloak
+  STEALTH_HOME                  根配置与存储目录，默认 ~/.stealth`
 }
 
 export function parseOption(args: string[], flag: string): string | undefined {
