@@ -24,7 +24,7 @@ export async function launchProfile(
 
   if (!targetName && incomingUserData) {
     const vaultMatch = incomingUserData.match(
-      new RegExp(`(?:^|/)${engine.name}/profiles/([^/]+)/user-data/?$`),
+      new RegExp(`(?:^|[\\/])${engine.name}[\\/]profiles[\\/]([^\\/]+)[\\/]user-data[\\/]?$`),
     )
     if (vaultMatch?.[1]) {
       targetName = vaultMatch[1]
