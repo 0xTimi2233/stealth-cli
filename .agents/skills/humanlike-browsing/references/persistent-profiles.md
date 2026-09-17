@@ -10,7 +10,7 @@
 
 ### 2. 会话挂载启动
 
-遵循会话隔离规范，启动浏览器时显式指定会话标识并挂载目标环境：
+所有命令必须始终携带 Profile 与 Session：
 
 ```bash
 agent_browser --profile <name> --session <task_id> open <url>
