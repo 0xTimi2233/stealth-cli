@@ -139,6 +139,7 @@ export async function executeShim(
   const proc = spawn(upstream, rewrittenArgs, {
     stdio: 'inherit',
     windowsHide: false,
+    shell: process.platform === 'win32',
   })
 
   proc.on('error', (err) => {
