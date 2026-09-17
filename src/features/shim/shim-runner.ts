@@ -1,5 +1,15 @@
 import { spawn } from 'node:child_process'
-import { accessSync, constants, existsSync, readFileSync, realpathSync } from 'node:fs'
+import {
+  accessSync,
+  constants,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { homedir } from 'node:os'
 import { delimiter, isAbsolute, join } from 'node:path'
 import type { EngineType } from '@/domain/launch'
 import type { ProfileStorePort } from '@/port/store.port'
@@ -35,31 +45,92 @@ export function replaceOptionValue(args: string[], flag: string, newValue: strin
   return result
 }
 
+function resolveSessionStoreDir(): string {
+  const home = process.env.STEALTH_HOME || join(homedir(), '.stealth')
+  return join(home, 'active-sessions')
+}
+
+export function recordSessionProfile(sessionName: string, profileName: string): void {
+  const dir = resolveSessionStoreDir()
+  try {
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, sessionName), profileName, 'utf8')
+  } catch {}
+}
+
+export function getSessionProfile(sessionName: string): string | null {
+  const dir = resolveSessionStoreDir()
+  const p = join(dir, sessionName)
+  try {
+    if (existsSync(p)) {
+      return readFileSync(p, 'utf8').trim()
+    }
+  } catch {}
+  return null
+}
+
+export function clearSessionProfile(sessionName: string): void {
+  const dir = resolveSessionStoreDir()
+  const p = join(dir, sessionName)
+  try {
+    if (existsSync(p)) {
+      rmSync(p, { force: true })
+    }
+  } catch {}
+}
+
 export async function rewriteShimArgs(
   argv: string[],
   store: ProfileStorePort,
   engine: EngineType,
 ): Promise<string[]> {
+  const sessionName = parseShimOption(argv, '--session') || process.env.AGENT_BROWSER_SESSION
+  const isCloseCommand = argv.includes('close')
+
+  if (isCloseCommand && sessionName) {
+    clearSessionProfile(sessionName)
+  }
+
   const explicitProfile = parseShimOption(argv, '--profile')
 
-  if (!explicitProfile) {
+  let targetProfileName = explicitProfile
+
+  if (explicitProfile && sessionName) {
+    recordSessionProfile(sessionName, explicitProfile)
+  } else if (!explicitProfile && sessionName) {
+    const remembered = getSessionProfile(sessionName)
+    if (remembered) {
+      targetProfileName = remembered
+    }
+  }
+
+  if (!targetProfileName) {
     return argv
   }
 
   if (
-    isAbsolute(explicitProfile) ||
-    explicitProfile.startsWith('~') ||
-    explicitProfile.startsWith('.')
+    isAbsolute(targetProfileName) ||
+    targetProfileName.startsWith('~') ||
+    targetProfileName.startsWith('.')
   ) {
     return argv
   }
 
-  const profile = await store.get(explicitProfile, engine)
+  const profile = await store.get(targetProfileName, engine)
   if (!profile) {
-    throw new Error(`Profile '${explicitProfile}' not found for engine '${engine}'`)
+    if (explicitProfile) {
+      throw new Error(`Profile '${explicitProfile}' not found for engine '${engine}'`)
+    }
+    return argv
   }
+
   const vaultDir = store.resolveUserDataDir(profile.name, engine)
-  return replaceOptionValue(argv, '--profile', vaultDir)
+
+  if (explicitProfile) {
+    return replaceOptionValue(argv, '--profile', vaultDir)
+  }
+
+  return ['--profile', vaultDir, ...argv]
 }
 
 export function resolveUpstreamBinary(

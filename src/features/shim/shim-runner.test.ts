@@ -80,6 +80,44 @@ describe('Feature: Shim Runner (Pure Whitelist)', () => {
     )
   })
 
+  it('automatically preserves session profile binding across follow-up commands without explicit profile', async () => {
+    const step1Args = [
+      '--profile',
+      'worker-1',
+      '--session',
+      'persisted-session',
+      'open',
+      'https://example.com',
+    ]
+    const step1Rewritten = await rewriteShimArgs(step1Args, mockStore, 'prism')
+    expect(step1Rewritten).toEqual([
+      '--profile',
+      '/vault/prism/profiles/worker-1/user-data',
+      '--session',
+      'persisted-session',
+      'open',
+      'https://example.com',
+    ])
+
+    const step2Args = ['--session', 'persisted-session', 'snapshot', '-i']
+    const step2Rewritten = await rewriteShimArgs(step2Args, mockStore, 'prism')
+    expect(step2Rewritten).toEqual([
+      '--profile',
+      '/vault/prism/profiles/worker-1/user-data',
+      '--session',
+      'persisted-session',
+      'snapshot',
+      '-i',
+    ])
+
+    const step3Args = ['--session', 'persisted-session', 'close']
+    await rewriteShimArgs(step3Args, mockStore, 'prism')
+
+    const step4Args = ['--session', 'persisted-session', 'snapshot', '-i']
+    const step4Rewritten = await rewriteShimArgs(step4Args, mockStore, 'prism')
+    expect(step4Rewritten).toEqual(step4Args)
+  })
+
   it('preserves all other flags and commands untouched', async () => {
     const originalArgs = ['--help', '-h', '--version', '-v', 'doctor', 'install']
     const rewritten = await rewriteShimArgs(originalArgs, mockStore, 'prism')
