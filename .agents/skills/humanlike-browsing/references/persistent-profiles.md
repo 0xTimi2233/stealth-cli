@@ -13,7 +13,13 @@
 携带目标环境名称启动浏览器并导航：
 
 ```bash
-agent_browser --session <name> open <url>
+agent_browser --profile <name> open <url>
+```
+
+若需并发会话管理，可叠加 `--session` 标识：
+
+```bash
+agent_browser --profile <name> --session <task_id> open <url>
 ```
 
 ### 3. 生命周期纪律

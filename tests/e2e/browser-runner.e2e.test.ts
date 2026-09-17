@@ -114,16 +114,20 @@ describe.skipIf(!hasAgentBrowser)('Real Browser E2E Runner (Deterministic & Non-
       })
 
       const shimBin = join(shimDir, 'agent-browser')
-      const openProc = spawnSync(shimBin, ['--session', session, 'open', 'https://example.com'], {
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          PATH: `${shimDir}:${process.env.PATH}`,
-          STEALTH_HOME: testDir,
-          STEALTH_ENGINE: 'prism',
-          AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+      const openProc = spawnSync(
+        shimBin,
+        ['--profile', session, '--session', session, 'open', 'https://example.com'],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PATH: `${shimDir}:${process.env.PATH}`,
+            STEALTH_HOME: testDir,
+            STEALTH_ENGINE: 'prism',
+            AGENT_BROWSER_EXECUTABLE_PATH: STEALTH_LAUNCHER_PATH,
+          },
         },
-      })
+      )
       expect(openProc.status).toBe(0)
       expect(openProc.stdout).toContain('Example Domain')
 

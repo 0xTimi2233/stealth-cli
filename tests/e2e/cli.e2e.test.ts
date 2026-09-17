@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { spawnSync } from 'node:child_process'
+import { chmodSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -75,5 +76,79 @@ describe('CLI E2E', () => {
     const shortVer = runCli('-v')
     expect(shortVer.status).toBe(0)
     expect(shortVer.stdout).toBe(longVer.stdout)
+  })
+
+  it('forwards --help to upstream when invoking via shim without intercepting with stealth-cli help', () => {
+    const mockUpstreamPath = join(TEST_STEALTH_HOME, 'mock-upstream-help.sh')
+    writeFileSync(
+      mockUpstreamPath,
+      '#!/bin/sh\necho "agent-browser v0.5.0 upstream official help"\nexit 0\n',
+      { mode: 0o755 },
+    )
+    chmodSync(mockUpstreamPath, 0o755)
+
+    const res = runCli('shim', '--upstream', mockUpstreamPath, '--help')
+    expect(res.status).toBe(0)
+    expect(res.stdout).toContain('agent-browser v0.5.0 upstream official help')
+    expect(res.stdout).not.toContain('stealth-cli - 通用隐形浏览器调度套件')
+  })
+
+  it('translates --profile <name> to vault path in shim, keeping --session and commands untouched', () => {
+    runCli('create', 'shim-target-account')
+
+    const mockUpstreamPath = join(TEST_STEALTH_HOME, 'mock-upstream-args.sh')
+    writeFileSync(mockUpstreamPath, '#!/bin/sh\nprintf "%s\\n" "$@"\nexit 0\n', { mode: 0o755 })
+    chmodSync(mockUpstreamPath, 0o755)
+
+    const res = runCli(
+      'shim',
+      '--upstream',
+      mockUpstreamPath,
+      '--profile',
+      'shim-target-account',
+      '--session',
+      'my-task-session',
+      'open',
+      'https://example.com',
+    )
+    expect(res.status).toBe(0)
+    const lines = res.stdout.split('\n')
+    const profileIdx = lines.indexOf('--profile')
+    expect(profileIdx).toBeGreaterThanOrEqual(0)
+    expect(lines[profileIdx + 1]).toContain('/vault/prism/profiles/shim-target-account/user-data')
+
+    const sessionIdx = lines.indexOf('--session')
+    expect(sessionIdx).toBeGreaterThanOrEqual(0)
+    expect(lines[sessionIdx + 1]).toBe('my-task-session')
+
+    expect(lines).toContain('open')
+    expect(lines).toContain('https://example.com')
+
+    runCli('delete', 'shim-target-account')
+  })
+
+  it('passes arguments pure and untouched without injecting --profile when no --profile is specified', () => {
+    runCli('create', 'ephemeral-named-session')
+
+    const mockUpstreamPath = join(TEST_STEALTH_HOME, 'mock-upstream-pure.sh')
+    writeFileSync(mockUpstreamPath, '#!/bin/sh\nprintf "%s\\n" "$@"\nexit 0\n', { mode: 0o755 })
+    chmodSync(mockUpstreamPath, 0o755)
+
+    const res = runCli(
+      'shim',
+      '--upstream',
+      mockUpstreamPath,
+      '--session',
+      'ephemeral-named-session',
+      'open',
+      'https://example.com',
+    )
+    expect(res.status).toBe(0)
+    const lines = res.stdout.split('\n')
+    expect(lines).not.toContain('--profile')
+    expect(lines).toContain('--session')
+    expect(lines).toContain('ephemeral-named-session')
+
+    runCli('delete', 'ephemeral-named-session')
   })
 })

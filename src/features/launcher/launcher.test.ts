@@ -27,7 +27,7 @@ describe('Feature: Launcher', () => {
     )
   })
 
-  it('prioritizes vault userDataDir over upstream incoming --user-data-dir for managed profiles', async () => {
+  it('uses vault userDataDir when explicit profileName is supplied', async () => {
     const testProfile = createProfileEntity('test-account')
 
     const mockStore: ProfileStorePort = {
@@ -58,8 +58,8 @@ describe('Feature: Launcher', () => {
 
     const upstreamDir = '/upstream/specified/dir'
     const result = await launchProfile(
-      undefined,
       'test-account',
+      undefined,
       [`--user-data-dir=${upstreamDir}`, '--remote-debugging-pipe'],
       mockEngine,
       mockStore,
@@ -70,19 +70,57 @@ describe('Feature: Launcher', () => {
     expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(
       '/vault/prism/profiles/test-account/user-data',
     )
-    expect((capturedRequest as LaunchRequest | null)?.incomingArgs).not.toContain(
-      `--user-data-dir=${upstreamDir}`,
-    )
-    expect((capturedRequest as LaunchRequest | null)?.incomingArgs).toContain(
-      '--remote-debugging-pipe',
-    )
   })
 
-  it('respects incoming --user-data-dir for unmanaged ephemeral sessions', async () => {
+  it('infers profile from incoming --user-data-dir when it points to vault directory', async () => {
+    const testProfile = createProfileEntity('inferred-account')
+
     const mockStore: ProfileStorePort = {
-      resolveUserDataDir: () => '',
-      get: async () => null,
-      list: async () => [],
+      resolveUserDataDir: (name, engine) => `/vault/${engine}/profiles/${name}/user-data`,
+      get: async (name) => (name === 'inferred-account' ? testProfile : null),
+      list: async () => [testProfile],
+      save: async () => {},
+      delete: async () => true,
+    }
+
+    let capturedRequest: LaunchRequest | null = null
+
+    const mockEngine: EnginePort = {
+      name: 'prism',
+      getKernelPath: async () => '/bin/fake-kernel',
+      buildArgs: async (req) => req.incomingArgs,
+      launch: async (req) => {
+        capturedRequest = req
+        return {
+          engine: 'prism',
+          process: {} as never,
+          pid: 2222,
+          userDataDir: req.userDataDir,
+          effectiveArgs: req.incomingArgs,
+        }
+      },
+    }
+
+    const vaultDir = '/vault/prism/profiles/inferred-account/user-data'
+    await launchProfile(
+      undefined,
+      undefined,
+      [`--user-data-dir=${vaultDir}`, '--remote-debugging-pipe'],
+      mockEngine,
+      mockStore,
+    )
+
+    expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('inferred-account')
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toBe(vaultDir)
+  })
+
+  it('respects incoming --user-data-dir for unmanaged ephemeral sessions even if session matches a profile', async () => {
+    const testProfile = createProfileEntity('unmanaged-session')
+
+    const mockStore: ProfileStorePort = {
+      resolveUserDataDir: (name, engine) => `/vault/${engine}/profiles/${name}/user-data`,
+      get: async (name) => (name === 'unmanaged-session' ? testProfile : null),
+      list: async () => [testProfile],
       save: async () => {},
       delete: async () => true,
     }
@@ -217,16 +255,16 @@ describe('Feature: Launcher', () => {
         return {
           engine: 'cloak',
           process: {} as never,
-          pid: 2222,
+          pid: 9999,
           userDataDir: req.userDataDir,
           effectiveArgs: req.incomingArgs,
         }
       },
     }
 
-    await launchProfile(undefined, 'unmanaged-session', [], mockEngine, mockStore)
+    await launchProfile(undefined, undefined, [], mockEngine, mockStore)
 
+    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toMatch(/stealth-ephemeral-/)
     expect((capturedRequest as LaunchRequest | null)?.profile.name).toBe('ephemeral')
-    expect((capturedRequest as LaunchRequest | null)?.userDataDir).toContain('stealth-ephemeral-')
   })
 })

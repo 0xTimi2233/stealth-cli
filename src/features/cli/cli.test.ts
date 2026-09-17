@@ -99,4 +99,27 @@ describe('Feature: CLI Handler', () => {
     const versionCommand = await handleCliCommand(['version'], config, store, engines)
     expect(versionCommand).toBe(versionOutLong)
   })
+
+  it('does not intercept --help or --version when running proxy shim', async () => {
+    const store = new FileStoreAdapter(TEST_VAULT)
+    const configAdapter = new TomlConfigAdapter('/tmp/non-existent.toml')
+    const config = await configAdapter.load()
+    const engines = {
+      prism: new PrismAdapter('/tmp/fake-prism'),
+      cloak: new CloakAdapter('/tmp/fake-cloak'),
+    }
+
+    const mockUpstream = join(TEST_VAULT, 'mock-upstream.sh')
+    const { writeFileSync, chmodSync } = await import('node:fs')
+    writeFileSync(mockUpstream, '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+    chmodSync(mockUpstream, 0o755)
+
+    const res = await handleCliCommand(
+      ['shim', '--upstream', mockUpstream, '--help'],
+      config,
+      store,
+      engines,
+    )
+    expect(res).toBe('')
+  })
 })

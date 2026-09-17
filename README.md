@@ -65,7 +65,7 @@ screen_height = 900
 | :--- | :--- | :--- |
 | `STEALTH_HOME` | `~/.stealth` | stealth-cli 根配置与存储目录 |
 | `STEALTH_ENGINE` | 读 config.toml | 动态覆盖当前激活引擎（`prism` \| `cloak`） |
-| `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `/usr/local/bin/stealth-launcher` 供 agent-browser 挂载 |
+| `AGENT_BROWSER_EXECUTABLE_PATH` | - | 指定为 `stealth-cli` 路径（如 `~/.local/bin/stealth-cli`）供 agent-browser 挂载 |
 | `AGENT_BROWSER_BIN` | `~/.bun/bin/agent-browser` | E2E 测试探测的 agent-browser 可执行路径，缺失则跳过 E2E 用例 |
 
 ## CLI 指令契约
@@ -192,23 +192,30 @@ stealth-cli shim --install [--dir <path>]
 stealth-cli shim --install
 
 # 导出内核启动器环境变量
-export AGENT_BROWSER_EXECUTABLE_PATH="/usr/local/bin/stealth-launcher"
+export AGENT_BROWSER_EXECUTABLE_PATH="$HOME/.local/bin/stealth-cli"
 ```
 
-日常执行或 Agent 调度时直接使用会话名称挂载环境：
+调用契约：
 ```bash
-agent-browser --session worker-1 open https://example.com
+# 持久化环境任务：携带环境名称挂载（底层自动展开为当前引擎物理路径，固定指纹与数据留存）
+agent-browser --profile worker-1 open https://example.com
+
+# 临时无状态任务：不传 profile（底层自动分配全新随机硬件指纹种子，用完即释放）
+agent-browser open https://example.com
+
+# 并发任务隔离：可自由组合 --session 进行守护进程区分
+agent-browser --profile worker-1 --session task-a open https://example.com
 ```
 
 ### 2. 与 Playwright 集成
 
-直接将 Launcher 指定为可执行程序路径：
+直接将 stealth-cli 指定为可执行程序路径：
 
 ```typescript
 import { chromium } from 'playwright'
 
 const browser = await chromium.launch({
-  executablePath: '/usr/local/bin/stealth-launcher',
+  executablePath: '/usr/local/bin/stealth-cli',
   args: ['--profile=worker-1'],
 })
 ```

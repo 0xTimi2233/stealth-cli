@@ -91,18 +91,22 @@ export async function handleCliCommand(
   engines: Record<EngineType, EnginePort>,
 ): Promise<string> {
   const firstArg = argv[0]
-  if (
-    firstArg === 'help' ||
-    firstArg === '--help' ||
-    firstArg === '-h' ||
-    argv.includes('--help') ||
-    argv.includes('-h')
-  ) {
-    return getHelpText()
-  }
+  const isShimExecution = firstArg === 'shim' && !argv.includes('--install')
 
-  if (firstArg === 'version' || firstArg === '--version' || firstArg === '-v') {
-    return `stealth-cli v${VERSION}`
+  if (!isShimExecution) {
+    if (
+      firstArg === 'help' ||
+      firstArg === '--help' ||
+      firstArg === '-h' ||
+      argv.includes('--help') ||
+      argv.includes('-h')
+    ) {
+      return getHelpText()
+    }
+
+    if (firstArg === 'version' || firstArg === '--version' || firstArg === '-v') {
+      return `stealth-cli v${VERSION}`
+    }
   }
 
   const KNOWN_COMMANDS = new Set([
@@ -202,7 +206,6 @@ export async function handleCliCommand(
       const effectiveArgs = filterOutFlag(filterOutFlag(remainingArgs, '--upstream'), '--dir')
       await executeShim(effectiveArgs, store, activeEngineType, {
         upstreamBinary: upstream,
-        envSession: process.env.AGENT_BROWSER_SESSION,
         currentShimPath: process.env.STEALTH_SHIM_PATH,
       })
       return ''
