@@ -10,18 +10,22 @@
 
 ### 2. 会话挂载启动
 
-携带目标环境名称启动浏览器并导航：
+启动浏览器并挂载目标环境，必须显式指定任务会话标识以确保进程与通信隔离：
 
 ```bash
-agent_browser --profile <name> open <url>
+agent_browser --profile <name> --session worker-<task_id> open <url>
 ```
 
-若需并发会话管理，可叠加 `--session` 标识：
+启动完成后，后续快照与交互动作统一携带该会话标识推进业务：
 
 ```bash
-agent_browser --profile <name> --session <task_id> open <url>
+agent_browser --session worker-<task_id> snapshot -i
 ```
 
 ### 3. 生命周期纪律
 
-持久环境承载真实账号数据与登录凭据，操作结束后统一执行 `close` 释放当前会话进程，严禁执行删除操作，确保持久目录与 Cookie 留存
+持久环境承载真实账号数据与登录凭据，操作结束后统一执行对应会话的关闭释放，严禁执行删除操作，确保持久目录与 Cookie 留存：
+
+```bash
+agent_browser --session worker-<task_id> close
+```
