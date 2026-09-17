@@ -26,6 +26,18 @@ function runCli(...args: string[]): {
   }
 }
 
+function createMockUpstream(name: string, contentUnix: string, contentWin: string): string {
+  if (process.platform === 'win32') {
+    const p = join(TEST_STEALTH_HOME, `${name}.cmd`)
+    writeFileSync(p, contentWin)
+    return p
+  }
+  const p = join(TEST_STEALTH_HOME, `${name}.sh`)
+  writeFileSync(p, contentUnix, { mode: 0o755 })
+  chmodSync(p, 0o755)
+  return p
+}
+
 describe('CLI E2E', () => {
   it('executes list command and outputs clean JSON array', () => {
     const res = runCli('list')
@@ -79,13 +91,11 @@ describe('CLI E2E', () => {
   })
 
   it('forwards --help to upstream when invoking via shim without intercepting with stealth-cli help', () => {
-    const mockUpstreamPath = join(TEST_STEALTH_HOME, 'mock-upstream-help.sh')
-    writeFileSync(
-      mockUpstreamPath,
+    const mockUpstreamPath = createMockUpstream(
+      'mock-upstream-help',
       '#!/bin/sh\necho "agent-browser v0.5.0 upstream official help"\nexit 0\n',
-      { mode: 0o755 },
+      '@echo off\r\necho agent-browser v0.5.0 upstream official help\r\nexit /b 0\r\n',
     )
-    chmodSync(mockUpstreamPath, 0o755)
 
     const res = runCli('shim', '--upstream', mockUpstreamPath, '--help')
     expect(res.status).toBe(0)
@@ -96,9 +106,11 @@ describe('CLI E2E', () => {
   it('translates --profile <name> to vault path in shim, keeping --session and commands untouched', () => {
     runCli('create', 'shim-target-account')
 
-    const mockUpstreamPath = join(TEST_STEALTH_HOME, 'mock-upstream-args.sh')
-    writeFileSync(mockUpstreamPath, '#!/bin/sh\nprintf "%s\\n" "$@"\nexit 0\n', { mode: 0o755 })
-    chmodSync(mockUpstreamPath, 0o755)
+    const mockUpstreamPath = createMockUpstream(
+      'mock-upstream-args',
+      '#!/bin/sh\nprintf "%s\\n" "$@"\nexit 0\n',
+      '@echo off\r\n:loop\r\nif "%~1"=="" goto end\r\necho %~1\r\nshift\r\ngoto loop\r\n:end\r\nexit /b 0\r\n',
+    )
 
     const res = runCli(
       'shim',
@@ -112,10 +124,12 @@ describe('CLI E2E', () => {
       'https://example.com',
     )
     expect(res.status).toBe(0)
-    const lines = res.stdout.split('\n')
+    const lines = res.stdout.split(/\r?\n/)
     const profileIdx = lines.indexOf('--profile')
     expect(profileIdx).toBeGreaterThanOrEqual(0)
-    expect(lines[profileIdx + 1]).toContain('/vault/prism/profiles/shim-target-account/user-data')
+    expect(lines[profileIdx + 1]).toMatch(
+      /[/\\]vault[/\\]prism[/\\]profiles[/\\]shim-target-account[/\\]user-data/,
+    )
 
     const sessionIdx = lines.indexOf('--session')
     expect(sessionIdx).toBeGreaterThanOrEqual(0)
@@ -130,9 +144,11 @@ describe('CLI E2E', () => {
   it('passes arguments pure and untouched without injecting --profile when no --profile is specified', () => {
     runCli('create', 'ephemeral-named-session')
 
-    const mockUpstreamPath = join(TEST_STEALTH_HOME, 'mock-upstream-pure.sh')
-    writeFileSync(mockUpstreamPath, '#!/bin/sh\nprintf "%s\\n" "$@"\nexit 0\n', { mode: 0o755 })
-    chmodSync(mockUpstreamPath, 0o755)
+    const mockUpstreamPath = createMockUpstream(
+      'mock-upstream-pure',
+      '#!/bin/sh\nprintf "%s\\n" "$@"\nexit 0\n',
+      '@echo off\r\n:loop\r\nif "%~1"=="" goto end\r\necho %~1\r\nshift\r\ngoto loop\r\n:end\r\nexit /b 0\r\n',
+    )
 
     const res = runCli(
       'shim',
@@ -144,7 +160,7 @@ describe('CLI E2E', () => {
       'https://example.com',
     )
     expect(res.status).toBe(0)
-    const lines = res.stdout.split('\n')
+    const lines = res.stdout.split(/\r?\n/)
     expect(lines).not.toContain('--profile')
     expect(lines).toContain('--session')
     expect(lines).toContain('ephemeral-named-session')
