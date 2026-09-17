@@ -39,31 +39,27 @@ export async function rewriteShimArgs(
   argv: string[],
   store: ProfileStorePort,
   engine: EngineType,
-  envSession?: string,
 ): Promise<string[]> {
   const explicitProfile = parseShimOption(argv, '--profile')
 
-  if (explicitProfile) {
-    if (isAbsolute(explicitProfile)) {
-      return argv
-    }
-    const profile = await store.get(explicitProfile, engine)
-    if (!profile) {
-      throw new Error(`Profile '${explicitProfile}' not found for engine '${engine}'`)
-    }
-    const vaultDir = store.resolveUserDataDir(profile.name, engine)
-    return replaceOptionValue(argv, '--profile', vaultDir)
+  if (!explicitProfile) {
+    return argv
   }
 
-  const sessionName = parseShimOption(argv, '--session') || envSession || 'default'
-  const matched = await store.get(sessionName, engine)
-
-  if (matched) {
-    const vaultDir = store.resolveUserDataDir(matched.name, engine)
-    return ['--profile', vaultDir, ...argv]
+  if (
+    isAbsolute(explicitProfile) ||
+    explicitProfile.startsWith('~') ||
+    explicitProfile.startsWith('.')
+  ) {
+    return argv
   }
 
-  return argv
+  const profile = await store.get(explicitProfile, engine)
+  if (!profile) {
+    throw new Error(`Profile '${explicitProfile}' not found for engine '${engine}'`)
+  }
+  const vaultDir = store.resolveUserDataDir(profile.name, engine)
+  return replaceOptionValue(argv, '--profile', vaultDir)
 }
 
 export function resolveUpstreamBinary(
@@ -129,7 +125,6 @@ export async function executeShim(
   engine: EngineType,
   options?: {
     upstreamBinary?: string
-    envSession?: string
     currentShimPath?: string
   },
 ): Promise<void> {
@@ -139,16 +134,12 @@ export async function executeShim(
     options?.currentShimPath,
   )
 
-  const rewrittenArgs = await rewriteShimArgs(
-    argv,
-    store,
-    engine,
-    options?.envSession || process.env.AGENT_BROWSER_SESSION,
-  )
+  const rewrittenArgs = await rewriteShimArgs(argv, store, engine)
 
   const proc = spawn(upstream, rewrittenArgs, {
     stdio: 'inherit',
     windowsHide: false,
+    shell: process.platform === 'win32',
   })
 
   proc.on('error', (err) => {
