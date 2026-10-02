@@ -20,7 +20,6 @@ fi
 
 mv -f "${INSTALL_DIR}/stealth-cli.js" "${INSTALL_DIR}/stealth-cli"
 chmod +x "${INSTALL_DIR}/stealth-cli"
-ln -sf "${INSTALL_DIR}/stealth-cli" "${INSTALL_DIR}/stealth-launcher"
 
 echo "正在刷新调度垫片..."
 "${INSTALL_DIR}/stealth-cli" shim --install --dir "${INSTALL_DIR}"
